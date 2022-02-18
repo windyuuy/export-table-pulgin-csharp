@@ -1,16 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ExportPlugin = exports.export_stuff = exports.foreach = exports.st = exports.cmm = void 0;
-function cmm(a) { return ""; }
-exports.cmm = cmm;
-function st(f) {
-    return f();
-}
-exports.st = st;
-function foreach(ls, f) {
-    return ls.map(e => f(e)).join("\n");
-}
-exports.foreach = foreach;
+exports.ExportPlugin = exports.export_stuff = void 0;
+const windy_quicktable_1 = require("windy-quicktable");
 function export_stuff(paras) {
     let { datas, fields, inject, name, objects, packagename, tables, xxtea, } = paras;
     let firstLetterUpper = function (str) {
@@ -129,18 +120,18 @@ public class ${RowClass} {
 
 	public static List<${RowClass}> Configs = new List<${RowClass}>()
 	{
-${foreach(datas, data => `		new ${RowClass}(${st(() => fields.map((f, index) => genValue(data[index], f.type)).join(", "))}),`)}
+${(0, windy_quicktable_1.foreach)(datas, data => `		new ${RowClass}(${(0, windy_quicktable_1.st)(() => fields.map((f, index) => genValue(data[index], f.type)).join(", "))}),`)}
 	};
 
 	public ${RowClass}() { }
-	public ${RowClass}(${st(() => fields.map(f => `${getFieldType(f.type)} ${convVarName(f.name)}`).join(", "))})
+	public ${RowClass}(${(0, windy_quicktable_1.st)(() => fields.map(f => `${getFieldType(f.type)} ${convVarName(f.name)}`).join(", "))})
 	{
-${foreach(fields, f => `		this.${convMemberName(f.name)} = ${convVarName(f.name)};`)}
+${(0, windy_quicktable_1.foreach)(fields, f => `		this.${convMemberName(f.name)} = ${convVarName(f.name)};`)}
 	}
 
 	public virtual ${RowClass} MergeFrom(${RowClass} source)
 	{
-${foreach(fields, f => `		this.${convMemberName(f.name)} = source.${convMemberName(f.name)};`)}
+${(0, windy_quicktable_1.foreach)(fields, f => `		this.${convMemberName(f.name)} = source.${convMemberName(f.name)};`)}
 		return this;
 	}
 
@@ -151,16 +142,16 @@ ${foreach(fields, f => `		this.${convMemberName(f.name)} = source.${convMemberNa
 		return config;
 	}
 
-	${cmm( /**生成字段 */)}
-${foreach(fields, f => `
+	${(0, windy_quicktable_1.cmm)( /**生成字段 */)}
+${(0, windy_quicktable_1.foreach)(fields, f => `
 	/// <summary>
-${foreach(getDescripts(f), line => `	/// ${line}`)}
+${(0, windy_quicktable_1.foreach)(getDescripts(f), line => `	/// ${line}`)}
 	/// </summary>
 	public ${getFieldType(f.type)} ${convMemberName(f.name)};`)}
 
-	${cmm( /**生成get字段 */)}
+	${(0, windy_quicktable_1.cmm)( /**生成get字段 */)}
 	#region get字段
-${foreach(fields, f => `	public ${getFieldType(f.type)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`)}
+${(0, windy_quicktable_1.foreach)(fields, f => `	public ${getFieldType(f.type)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`)}
 	#endregion
 }
 `;

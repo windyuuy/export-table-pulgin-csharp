@@ -1,27 +1,5 @@
 
-import DataTable, { Field } from "windy-quicktable/dist/table/DataTable"
-import { IPlugin } from "windy-quicktable/dist/iplugin/IPlugin"
-
-export function cmm(a?: string) { return "" }
-export function st(f: (a?: any) => string) {
-	return f()
-}
-export function foreach<T>(ls: T[], f: (e: T) => string) {
-	return ls.map(e => f(e)).join("\n")
-}
-
-export type ExportParams = {
-	name: string
-	tables: DataTable[]
-	fields: Field[]
-	datas: any[][]
-	objects: any[]
-	xxtea: (str: string, key: string, deflate: boolean) => string
-	inject: {
-		[key: string]: boolean;
-	}
-	packagename: string | undefined
-}
+import { cmm, ExportParams, Field, foreach, IPlugin, st } from "windy-quicktable"
 
 export function export_stuff(paras: ExportParams): string | null {
 	let {
