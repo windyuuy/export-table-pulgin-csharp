@@ -1,0 +1,14 @@
+{
+  "name": "export-table-pulgin-csharp",
+  "version": "1.0.2",
+  "description": "",
+  "main": "./dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "windyuuy",
+  "license": "ISC",
+  "dependencies": {
+    "windy-quicktable": "^1.3.27"
+  }
+}
