@@ -1,7 +1,8 @@
 
-import { cmm, ExportParams, Field, foreach, IPlugin, st } from "windy-quicktable"
+import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams } from "windy-quicktable"
+import * as fs from "fs"
 
-export function export_stuff(paras: ExportParams): string | null {
+export function export_stuff(paras: HandleSheetParams): string | null {
 	let {
 		datas,
 		fields,
@@ -162,8 +163,22 @@ ${foreach(fields, f =>
 
 }
 
-export class ExportPlugin implements IPlugin {
-	cs(paras: ExportParams): string | null {
-		return export_stuff(paras)
+export class ExportPlugin extends PluginBase {
+	name = "csharp"
+	tags: string[] = ["cs"]
+
+	handleSheet(paras: HandleSheetParams) {
+		let content = export_stuff(paras)
+		if (content != null) {
+			fs.writeFileSync(paras.outFilePath, content, "utf-8")
+		}
+		return content
+	}
+	handleBatch(paras: HandleBatchParams): void {
+		console.log("lkwej:", paras.workbookManager.dataTables.length)
 	}
 }
+
+export const ExportPlugins = [
+	new ExportPlugin(),
+]

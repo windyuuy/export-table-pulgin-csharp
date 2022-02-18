@@ -1,7 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ExportPlugin = exports.export_stuff = void 0;
+exports.ExportPlugins = exports.ExportPlugin = exports.export_stuff = void 0;
 const windy_quicktable_1 = require("windy-quicktable");
+const fs = __importStar(require("fs"));
 function export_stuff(paras) {
     let { datas, fields, inject, name, objects, packagename, tables, xxtea, } = paras;
     let firstLetterUpper = function (str) {
@@ -158,9 +178,24 @@ ${(0, windy_quicktable_1.foreach)(fields, f => `	public ${getFieldType(f.type)} 
     return temp;
 }
 exports.export_stuff = export_stuff;
-class ExportPlugin {
-    cs(paras) {
-        return export_stuff(paras);
+class ExportPlugin extends windy_quicktable_1.PluginBase {
+    constructor() {
+        super(...arguments);
+        this.name = "csharp";
+        this.tags = ["cs"];
+    }
+    handleSheet(paras) {
+        let content = export_stuff(paras);
+        if (content != null) {
+            fs.writeFileSync(paras.outFilePath, content, "utf-8");
+        }
+        return content;
+    }
+    handleBatch(paras) {
+        console.log("lkwej:", paras.workbookManager.dataTables.length);
     }
 }
 exports.ExportPlugin = ExportPlugin;
+exports.ExportPlugins = [
+    new ExportPlugin(),
+];
