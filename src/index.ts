@@ -170,7 +170,7 @@ export class ExportPlugin extends PluginBase {
 	handleSheet(paras: HandleSheetParams) {
 		let content = export_stuff(paras)
 		if (content != null) {
-			fs.writeFileSync(paras.outFilePath, content, "utf-8")
+			fs.writeFileSync(paras.outFilePath.fullPath, content, "utf-8")
 		}
 		return content
 	}
