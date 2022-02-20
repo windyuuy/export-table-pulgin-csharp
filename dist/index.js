@@ -21,7 +21,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExportPlugins = exports.ExportPlugin = exports.export_stuff = void 0;
 const windy_quicktable_1 = require("windy-quicktable");
-const fs = __importStar(require("fs"));
+const fs = __importStar(require("fs-extra"));
 function export_stuff(paras) {
     let { datas, fields, inject, name, objects, packagename, tables, xxtea, } = paras;
     let firstLetterUpper = function (str) {
@@ -36,7 +36,8 @@ function export_stuff(paras) {
     let initFunc = name + "Init";
     let mapfield = fields.find(a => a.type == "key"); //如果是map，则生成对应的map
     let mapName = name + "Map";
-    let getFieldType = function (t) {
+    let getFieldType = function (f) {
+        let t = f.type;
         if (t == "object") {
             throw new Error("invalid type <object>");
         }
@@ -71,17 +72,18 @@ function export_stuff(paras) {
             return "int[]";
         }
         else if (t == "any") {
-            throw new Error("invalid type <any>");
+            throw new Error(`invalid type ${f.name}:<any>`);
         }
         else if (t == "key") {
             return "string";
         }
         else {
-            throw new Error("invalid type <unkown>");
+            throw new Error(`invalid type ${f.name}:<unkown>`);
         }
         return t;
     };
-    const genValue = (value, t) => {
+    const genValue = (value, f) => {
+        let t = f.type;
         if (t == "object") {
             throw new Error("invalid type <object>");
         }
@@ -120,12 +122,12 @@ function export_stuff(paras) {
             return `new int[]{${values.join(", ")}}`;
         }
         else if (t == "any") {
-            throw new Error("invalid type <any>");
+            throw new Error(`invalid type ${f.name}:<any>`);
         }
         else if (t == "key") {
             return `${value}`;
         }
-        throw new Error("invalid type <unkown>");
+        throw new Error(`invalid type ${f.name}:<unkown>`);
     };
     const getTitle = (v) => {
         return v.describe.split("\n")[0];
@@ -140,11 +142,11 @@ public class ${RowClass} {
 
 	public static List<${RowClass}> Configs = new List<${RowClass}>()
 	{
-${(0, windy_quicktable_1.foreach)(datas, data => `		new ${RowClass}(${(0, windy_quicktable_1.st)(() => fields.map((f, index) => genValue(data[index], f.type)).join(", "))}),`)}
+${(0, windy_quicktable_1.foreach)(datas, data => `		new ${RowClass}(${(0, windy_quicktable_1.st)(() => fields.map((f, index) => genValue(data[index], f)).join(", "))}),`)}
 	};
 
 	public ${RowClass}() { }
-	public ${RowClass}(${(0, windy_quicktable_1.st)(() => fields.map(f => `${getFieldType(f.type)} ${convVarName(f.name)}`).join(", "))})
+	public ${RowClass}(${(0, windy_quicktable_1.st)(() => fields.map(f => `${getFieldType(f)} ${convVarName(f.name)}`).join(", "))})
 	{
 ${(0, windy_quicktable_1.foreach)(fields, f => `		this.${convMemberName(f.name)} = ${convVarName(f.name)};`)}
 	}
@@ -167,11 +169,11 @@ ${(0, windy_quicktable_1.foreach)(fields, f => `
 	/// <summary>
 ${(0, windy_quicktable_1.foreach)(getDescripts(f), line => `	/// ${line}`)}
 	/// </summary>
-	public ${getFieldType(f.type)} ${convMemberName(f.name)};`)}
+	public ${getFieldType(f)} ${convMemberName(f.name)};`)}
 
 	${(0, windy_quicktable_1.cmm)( /**生成get字段 */)}
 	#region get字段
-${(0, windy_quicktable_1.foreach)(fields, f => `	public ${getFieldType(f.type)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`)}
+${(0, windy_quicktable_1.foreach)(fields, f => `	public ${getFieldType(f)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`)}
 	#endregion
 }
 `;
@@ -187,12 +189,9 @@ class ExportPlugin extends windy_quicktable_1.PluginBase {
     handleSheet(paras) {
         let content = export_stuff(paras);
         if (content != null) {
-            fs.writeFileSync(paras.outFilePath.fullPath, content, "utf-8");
+            fs.outputFileSync(paras.outFilePath.fullPath, content, "utf-8");
         }
         return content;
-    }
-    handleBatch(paras) {
-        console.log("lkwej:", paras.workbookManager.dataTables.length);
     }
 }
 exports.ExportPlugin = ExportPlugin;

@@ -1,6 +1,6 @@
 
 import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams } from "windy-quicktable"
-import * as fs from "fs"
+import * as fs from "fs-extra"
 
 export function export_stuff(paras: HandleSheetParams): string | null {
 	let {
@@ -28,7 +28,8 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 	let mapfield = fields.find(a => a.type == "key")//如果是map，则生成对应的map
 	let mapName = name + "Map"
 
-	let getFieldType = function (t: string) {
+	let getFieldType = function (f: Field) {
+		let t = f.type
 		if (t == "object") {
 			throw new Error("invalid type <object>")
 		} else if (t == "object[]") {
@@ -52,16 +53,17 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 		} else if (t == "fk[]") {
 			return "int[]";
 		} else if (t == "any") {
-			throw new Error("invalid type <any>")
+			throw new Error(`invalid type ${f.name}:<any>`)
 		} else if (t == "key") {
 			return "string";
 		} else {
-			throw new Error("invalid type <unkown>")
+			throw new Error(`invalid type ${f.name}:<unkown>`)
 		}
 		return t;
 	}
 
-	const genValue = (value: any, t: string): string => {
+	const genValue = (value: any, f: Field): string => {
+		let t = f.type
 		if (t == "object") {
 			throw new Error("invalid type <object>")
 		} else if (t == "object[]") {
@@ -89,12 +91,12 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 			let values = value as number[]
 			return `new int[]{${values.join(", ")}}`
 		} else if (t == "any") {
-			throw new Error("invalid type <any>")
+			throw new Error(`invalid type ${f.name}:<any>`)
 		} else if (t == "key") {
 			return `${value}`
 		}
 
-		throw new Error("invalid type <unkown>")
+		throw new Error(`invalid type ${f.name}:<unkown>`)
 	}
 
 	const getTitle = (v: Field) => {
@@ -113,12 +115,12 @@ public class ${RowClass} {
 	public static List<${RowClass}> Configs = new List<${RowClass}>()
 	{
 ${foreach(datas, data =>
-		`		new ${RowClass}(${st(() => fields.map((f, index) => genValue(data[index], f.type)).join(", "))}),`
+		`		new ${RowClass}(${st(() => fields.map((f, index) => genValue(data[index], f)).join(", "))}),`
 	)}
 	};
 
 	public ${RowClass}() { }
-	public ${RowClass}(${st(() => fields.map(f => `${getFieldType(f.type)} ${convVarName(f.name)}`).join(", "))})
+	public ${RowClass}(${st(() => fields.map(f => `${getFieldType(f)} ${convVarName(f.name)}`).join(", "))})
 	{
 ${foreach(fields, f =>
 		`		this.${convMemberName(f.name)} = ${convVarName(f.name)};`
@@ -147,13 +149,13 @@ ${foreach(getDescripts(f), line =>
 		`	/// ${line}`
 	)}
 	/// </summary>
-	public ${getFieldType(f.type)} ${convMemberName(f.name)};`
+	public ${getFieldType(f)} ${convMemberName(f.name)};`
 	)}
 
 	${cmm(/**生成get字段 */)}
 	#region get字段
 ${foreach(fields, f =>
-		`	public ${getFieldType(f.type)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`
+		`	public ${getFieldType(f)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`
 	)}
 	#endregion
 }
@@ -170,12 +172,9 @@ export class ExportPlugin extends PluginBase {
 	handleSheet(paras: HandleSheetParams) {
 		let content = export_stuff(paras)
 		if (content != null) {
-			fs.writeFileSync(paras.outFilePath.fullPath, content, "utf-8")
+			fs.outputFileSync(paras.outFilePath.fullPath, content, "utf-8")
 		}
 		return content
-	}
-	handleBatch(paras: HandleBatchParams): void {
-		console.log("lkwej:", paras.workbookManager.dataTables.length)
 	}
 }
 
