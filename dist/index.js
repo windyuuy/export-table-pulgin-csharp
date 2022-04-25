@@ -148,6 +148,7 @@ function export_stuff(paras) {
 using System.Collections.Generic;
 using System.Linq;
 
+namespace MEEC.ExportedConfigs{
 public class ${RowClass} {
 
 	public static List<${RowClass}> Configs = new List<${RowClass}>()
@@ -182,7 +183,7 @@ ${(0, export_table_lib_1.foreach)(getDescripts(f), line => `	/// ${line}`)}
 	public ${getFieldType(f)} ${convMemberName(f.name)};`)}
 
 	${(0, export_table_lib_1.cmm)( /**生成get字段 */)}
-	#region get字段
+#region get字段
 ${(0, export_table_lib_1.foreach)(fields, f => {
         if (f.nameOrigin != f.name) {
             return `	public ${getFieldType(f)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`;
@@ -191,9 +192,9 @@ ${(0, export_table_lib_1.foreach)(fields, f => {
             return "";
         }
     })}
-	#endregion
+#endregion
 
-	#region 生成fk.get/set
+#region 生成fk.get/set
 ${(0, export_table_lib_1.foreach)(fields, f => `
 ${(0, export_table_lib_1.iff)(f.type == "fk", () => `
 ${(0, export_table_lib_1.iff)(getFkFieldType(f).toLowerCase() != "uid", () => `
@@ -239,7 +240,7 @@ ${(0, export_table_lib_1.iff)(f.type == "fk[]", () => `
 				if(null==this.${convMemberName(f.name)}){
 					this._fk${convMemberName(f.name)} = new ${convMemberName(f.fkTableName)}[0];
 				}else{
-					this._fk${convMemberName(f.name)}=global::${convMemberName(f.fkTableName)}.Configs.FindAll(a=>a.${convMemberName(f.fkFieldName)}!=null && this.${convMemberName(f.name)}!.Contains(a.${convMemberName(f.fkFieldName)})).ToArray();
+					this._fk${convMemberName(f.name)}=MEEC.ExportedConfigs.${convMemberName(f.fkTableName)}.Configs.FindAll(a=>a.${convMemberName(f.fkFieldName)}!=null && this.${convMemberName(f.name)}!.Contains(a.${convMemberName(f.fkFieldName)})).ToArray();
 				}
 			}
 			return this._fk${convMemberName(f.name)};
@@ -247,7 +248,8 @@ ${(0, export_table_lib_1.iff)(f.type == "fk[]", () => `
 	}
 `)}
 `)}
-	#endregion 生成fk.get/set
+#endregion 生成fk.get/set
+}
 }
 `;
     return temp;

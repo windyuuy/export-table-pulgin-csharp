@@ -117,6 +117,7 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 using System.Collections.Generic;
 using System.Linq;
 
+namespace MEEC.ExportedConfigs{
 public class ${RowClass} {
 
 	public static List<${RowClass}> Configs = new List<${RowClass}>()
@@ -160,7 +161,7 @@ ${foreach(getDescripts(f), line =>
 	)}
 
 	${cmm(/**生成get字段 */)}
-	#region get字段
+#region get字段
 ${foreach(fields, f => {
 		if (f.nameOrigin != f.name) {
 			return `	public ${getFieldType(f)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`
@@ -169,9 +170,9 @@ ${foreach(fields, f => {
 		}
 	}
 	)}
-	#endregion
+#endregion
 
-	#region 生成fk.get/set
+#region 生成fk.get/set
 ${foreach(fields, f => `
 ${iff(f.type == "fk", () => `
 ${iff(getFkFieldType(f).toLowerCase() != "uid", () => `
@@ -217,7 +218,7 @@ ${iff(f.type == "fk[]", () => `
 				if(null==this.${convMemberName(f.name)}){
 					this._fk${convMemberName(f.name)} = new ${convMemberName(f.fkTableName!)}[0];
 				}else{
-					this._fk${convMemberName(f.name)}=global::${convMemberName(f.fkTableName!)}.Configs.FindAll(a=>a.${convMemberName(f.fkFieldName!)}!=null && this.${convMemberName(f.name)}!.Contains(a.${convMemberName(f.fkFieldName!)})).ToArray();
+					this._fk${convMemberName(f.name)}=MEEC.ExportedConfigs.${convMemberName(f.fkTableName!)}.Configs.FindAll(a=>a.${convMemberName(f.fkFieldName!)}!=null && this.${convMemberName(f.name)}!.Contains(a.${convMemberName(f.fkFieldName!)})).ToArray();
 				}
 			}
 			return this._fk${convMemberName(f.name)};
@@ -225,7 +226,8 @@ ${iff(f.type == "fk[]", () => `
 	}
 `)}
 `)}
-	#endregion 生成fk.get/set
+#endregion 生成fk.get/set
+}
 }
 `
 
