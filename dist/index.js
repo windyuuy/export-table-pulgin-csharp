@@ -194,6 +194,40 @@ ${(0, export_table_lib_1.foreach)(fields, f => {
     })}
 #endregion
 
+#region uid map
+${(0, export_table_lib_1.foreach)(fields, f => {
+        if (f.isUnique) {
+            return `
+		protected static Dictionary<int, ${RowClass}> _tempDictBy${convMemberName(f.name)};
+		public static ${RowClass} GetConfigBy${convMemberName(f.name)}(int ${convMemberName(f.name)})
+		{
+			if (_tempDictBy${convMemberName(f.name)} == null)
+			{
+				_tempDictBy${convMemberName(f.name)} = new Dictionary<int, ${RowClass}>();
+				Configs.ForEach(c =>
+				{
+					_tempDictBy${convMemberName(f.name)}.Add(c.${convMemberName(f.name)}, c);
+				});
+			}
+			return _tempDictBy${convMemberName(f.name)}.GetValueOrDefault(${convMemberName(f.name)});
+		}
+`;
+        }
+        else if (f.type == "number" || f.type == "string") {
+            return `
+		public static ${RowClass}[] GetConfigsBy${convMemberName(f.name)}(int ${convMemberName(f.name)})
+		{
+			return Configs.Where(c => c.${convMemberName(f.name)} == ${convMemberName(f.name)}).ToArray();
+		}
+`;
+        }
+        else {
+            return "";
+        }
+    })}
+
+#endregion uid map
+
 #region 生成fk.get/set
 ${(0, export_table_lib_1.foreach)(fields, f => `
 ${(0, export_table_lib_1.iff)(f.type == "fk", () => `
