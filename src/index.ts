@@ -1,5 +1,5 @@
 
-import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams } from "windy-quicktable"
+import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, iff } from "export-table-lib"
 import * as fs from "fs-extra"
 
 export function export_stuff(paras: HandleSheetParams): string | null {
@@ -53,6 +53,7 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 		} else if (t == "fk[]") {
 			return "int[]";
 		} else if (t == "any") {
+			console.log(f)
 			throw new Error(`invalid type ${f.name}:<any>`)
 		} else if (t == "key") {
 			return "string";
@@ -60,6 +61,10 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 			throw new Error(`invalid type ${f.name}:<unkown>`)
 		}
 		return t;
+	}
+
+	let getFkFieldType = function (field: Field) {
+		return tables.find(a => a.name == field.fkTableName)!.fields!.find(a => a.name == field.fkFieldName)!.type
 	}
 
 	const genValue = (value: any, f: Field): string => {
@@ -91,6 +96,7 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 			let values = value as number[]
 			return `new int[]{${values.join(", ")}}`
 		} else if (t == "any") {
+			console.log(f)
 			throw new Error(`invalid type ${f.name}:<any>`)
 		} else if (t == "key") {
 			return `${value}`
@@ -109,6 +115,7 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 
 	let temp = `
 using System.Collections.Generic;
+using System.Linq;
 
 public class ${RowClass} {
 
@@ -154,10 +161,71 @@ ${foreach(getDescripts(f), line =>
 
 	${cmm(/**生成get字段 */)}
 	#region get字段
-${foreach(fields, f =>
-		`	public ${getFieldType(f)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`
+${foreach(fields, f => {
+		if (f.nameOrigin != f.name) {
+			return `	public ${getFieldType(f)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`
+		} else {
+			return ""
+		}
+	}
 	)}
 	#endregion
+
+	#region 生成fk.get/set
+${foreach(fields, f => `
+${iff(f.type == "fk", () => `
+${iff(getFkFieldType(f).toLowerCase() != "uid", () => `
+	protected ${convMemberName(f.fkTableName!)}[] _fk${convMemberName(f.name)}=null;
+	/**
+	 * ${f.describe}
+	 **/
+	public virtual ${convMemberName(f.fkTableName!)}[] ${convMemberName(f.name)}DataList{
+		get{
+			if(this._fk${convMemberName(f.name)}==null){
+				if(null==this.${convMemberName(f.name)}){
+					this._fk${convMemberName(f.name)} = new ${convMemberName(f.fkTableName!)}[0];
+				}else{
+					this._fk${convMemberName(f.name)}=${convMemberName(f.fkTableName!)}.FindAll(a=>a.${convMemberName(f.fkFieldName!)}!=null && this.${convMemberName(f.name)}==a.${convMemberName(f.fkFieldName!)}).ToArray();
+				}
+			}
+			return this._fk${convMemberName(f.name)};
+		}
+	}
+`).else(() => `
+	protected ${convMemberName(f.fkTableName!)} _fk${convMemberName(f.name)}=null;
+	/**
+	 * ${f.describe}
+	 **/
+	public virtual ${convMemberName(f.fkTableName!)} ${convMemberName(f.name)}Data{
+		get{
+			if(this._fk${convMemberName(f.name)}==null){
+				this._fk${convMemberName(f.name)}=${convMemberName(f.fkTableName!)}.Find(a=>a.${convMemberName(f.fkFieldName!)}==this.${convMemberName(f.name)});
+			}
+			return this._fk${convMemberName(f.name)};
+		}
+	}
+`)}
+`)}
+${iff(f.type == "fk[]", () => `
+	protected ${convMemberName(f.fkTableName!)}[] _fk${convMemberName(f.name)}=null;
+	/**
+	 * ${f.describe}
+	 **/
+	public virtual ${convMemberName(f.fkTableName!)}[] ${convMemberName(f.name)}DataList{
+		get{
+			if(this._fk${convMemberName(f.name)}==null){
+				if(null==this.${convMemberName(f.name)}){
+					this._fk${convMemberName(f.name)} = new ${convMemberName(f.fkTableName!)}[0];
+				}else{
+					this._fk${convMemberName(f.name)}=global::${convMemberName(f.fkTableName!)}.Configs.FindAll(a=>a.${convMemberName(f.fkFieldName!)}!=null && this.${convMemberName(f.name)}!.Contains(a.${convMemberName(f.fkFieldName!)})).ToArray();
+				}
+			}
+			return this._fk${convMemberName(f.name)};
+		}
+	}
+`)}
+`)}
+	#endregion 生成fk.get/set
 }
 `
 

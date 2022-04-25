@@ -1,4 +1,4 @@
-import { HandleSheetParams, PluginBase } from "windy-quicktable";
+import { HandleSheetParams, PluginBase } from "export-table-lib";
 export declare function export_stuff(paras: HandleSheetParams): string | null;
 export declare class ExportPlugin extends PluginBase {
     name: string;

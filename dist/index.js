@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -20,7 +24,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExportPlugins = exports.ExportPlugin = exports.export_stuff = void 0;
-const windy_quicktable_1 = require("windy-quicktable");
+const export_table_lib_1 = require("export-table-lib");
 const fs = __importStar(require("fs-extra"));
 function export_stuff(paras) {
     let { datas, fields, inject, name, objects, packagename, tables, xxtea, } = paras;
@@ -72,6 +76,7 @@ function export_stuff(paras) {
             return "int[]";
         }
         else if (t == "any") {
+            console.log(f);
             throw new Error(`invalid type ${f.name}:<any>`);
         }
         else if (t == "key") {
@@ -81,6 +86,9 @@ function export_stuff(paras) {
             throw new Error(`invalid type ${f.name}:<unkown>`);
         }
         return t;
+    };
+    let getFkFieldType = function (field) {
+        return tables.find(a => a.name == field.fkTableName).fields.find(a => a.name == field.fkFieldName).type;
     };
     const genValue = (value, f) => {
         let t = f.type;
@@ -122,6 +130,7 @@ function export_stuff(paras) {
             return `new int[]{${values.join(", ")}}`;
         }
         else if (t == "any") {
+            console.log(f);
             throw new Error(`invalid type ${f.name}:<any>`);
         }
         else if (t == "key") {
@@ -137,23 +146,24 @@ function export_stuff(paras) {
     };
     let temp = `
 using System.Collections.Generic;
+using System.Linq;
 
 public class ${RowClass} {
 
 	public static List<${RowClass}> Configs = new List<${RowClass}>()
 	{
-${(0, windy_quicktable_1.foreach)(datas, data => `		new ${RowClass}(${(0, windy_quicktable_1.st)(() => fields.map((f, index) => genValue(data[index], f)).join(", "))}),`)}
+${(0, export_table_lib_1.foreach)(datas, data => `		new ${RowClass}(${(0, export_table_lib_1.st)(() => fields.map((f, index) => genValue(data[index], f)).join(", "))}),`)}
 	};
 
 	public ${RowClass}() { }
-	public ${RowClass}(${(0, windy_quicktable_1.st)(() => fields.map(f => `${getFieldType(f)} ${convVarName(f.name)}`).join(", "))})
+	public ${RowClass}(${(0, export_table_lib_1.st)(() => fields.map(f => `${getFieldType(f)} ${convVarName(f.name)}`).join(", "))})
 	{
-${(0, windy_quicktable_1.foreach)(fields, f => `		this.${convMemberName(f.name)} = ${convVarName(f.name)};`)}
+${(0, export_table_lib_1.foreach)(fields, f => `		this.${convMemberName(f.name)} = ${convVarName(f.name)};`)}
 	}
 
 	public virtual ${RowClass} MergeFrom(${RowClass} source)
 	{
-${(0, windy_quicktable_1.foreach)(fields, f => `		this.${convMemberName(f.name)} = source.${convMemberName(f.name)};`)}
+${(0, export_table_lib_1.foreach)(fields, f => `		this.${convMemberName(f.name)} = source.${convMemberName(f.name)};`)}
 		return this;
 	}
 
@@ -164,23 +174,86 @@ ${(0, windy_quicktable_1.foreach)(fields, f => `		this.${convMemberName(f.name)}
 		return config;
 	}
 
-	${(0, windy_quicktable_1.cmm)( /**生成字段 */)}
-${(0, windy_quicktable_1.foreach)(fields, f => `
+	${(0, export_table_lib_1.cmm)( /**生成字段 */)}
+${(0, export_table_lib_1.foreach)(fields, f => `
 	/// <summary>
-${(0, windy_quicktable_1.foreach)(getDescripts(f), line => `	/// ${line}`)}
+${(0, export_table_lib_1.foreach)(getDescripts(f), line => `	/// ${line}`)}
 	/// </summary>
 	public ${getFieldType(f)} ${convMemberName(f.name)};`)}
 
-	${(0, windy_quicktable_1.cmm)( /**生成get字段 */)}
+	${(0, export_table_lib_1.cmm)( /**生成get字段 */)}
 	#region get字段
-${(0, windy_quicktable_1.foreach)(fields, f => `	public ${getFieldType(f)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`)}
+${(0, export_table_lib_1.foreach)(fields, f => {
+        if (f.nameOrigin != f.name) {
+            return `	public ${getFieldType(f)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`;
+        }
+        else {
+            return "";
+        }
+    })}
 	#endregion
+
+	#region 生成fk.get/set
+${(0, export_table_lib_1.foreach)(fields, f => `
+${(0, export_table_lib_1.iff)(f.type == "fk", () => `
+${(0, export_table_lib_1.iff)(getFkFieldType(f).toLowerCase() != "uid", () => `
+	protected ${convMemberName(f.fkTableName)}[] _fk${convMemberName(f.name)}=null;
+	/**
+	 * ${f.describe}
+	 **/
+	public virtual ${convMemberName(f.fkTableName)}[] ${convMemberName(f.name)}DataList{
+		get{
+			if(this._fk${convMemberName(f.name)}==null){
+				if(null==this.${convMemberName(f.name)}){
+					this._fk${convMemberName(f.name)} = new ${convMemberName(f.fkTableName)}[0];
+				}else{
+					this._fk${convMemberName(f.name)}=${convMemberName(f.fkTableName)}.FindAll(a=>a.${convMemberName(f.fkFieldName)}!=null && this.${convMemberName(f.name)}==a.${convMemberName(f.fkFieldName)}).ToArray();
+				}
+			}
+			return this._fk${convMemberName(f.name)};
+		}
+	}
+`).else(() => `
+	protected ${convMemberName(f.fkTableName)} _fk${convMemberName(f.name)}=null;
+	/**
+	 * ${f.describe}
+	 **/
+	public virtual ${convMemberName(f.fkTableName)} ${convMemberName(f.name)}Data{
+		get{
+			if(this._fk${convMemberName(f.name)}==null){
+				this._fk${convMemberName(f.name)}=${convMemberName(f.fkTableName)}.Find(a=>a.${convMemberName(f.fkFieldName)}==this.${convMemberName(f.name)});
+			}
+			return this._fk${convMemberName(f.name)};
+		}
+	}
+`)}
+`)}
+${(0, export_table_lib_1.iff)(f.type == "fk[]", () => `
+	protected ${convMemberName(f.fkTableName)}[] _fk${convMemberName(f.name)}=null;
+	/**
+	 * ${f.describe}
+	 **/
+	public virtual ${convMemberName(f.fkTableName)}[] ${convMemberName(f.name)}DataList{
+		get{
+			if(this._fk${convMemberName(f.name)}==null){
+				if(null==this.${convMemberName(f.name)}){
+					this._fk${convMemberName(f.name)} = new ${convMemberName(f.fkTableName)}[0];
+				}else{
+					this._fk${convMemberName(f.name)}=global::${convMemberName(f.fkTableName)}.Configs.FindAll(a=>a.${convMemberName(f.fkFieldName)}!=null && this.${convMemberName(f.name)}!.Contains(a.${convMemberName(f.fkFieldName)})).ToArray();
+				}
+			}
+			return this._fk${convMemberName(f.name)};
+		}
+	}
+`)}
+`)}
+	#endregion 生成fk.get/set
 }
 `;
     return temp;
 }
 exports.export_stuff = export_stuff;
-class ExportPlugin extends windy_quicktable_1.PluginBase {
+class ExportPlugin extends export_table_lib_1.PluginBase {
     constructor() {
         super(...arguments);
         this.name = "csharp";
