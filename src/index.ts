@@ -20,7 +20,9 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 	let firstLetterLower = function (str: string) {
 		return str.charAt(0).toLowerCase() + str.slice(1);
 	};
-	let convMemberName = firstLetterUpper
+	let convMemberName = function (str: string) {
+		return str.split("_").map(s => firstLetterUpper(s)).join("")
+	}
 	let convVarName = firstLetterLower
 
 	let RowClass = firstLetterUpper(name)
@@ -176,12 +178,12 @@ ${foreach(fields, f => {
 ${foreach(fields, f => {
 		if (f.isUnique) {
 			return `
-		protected static Dictionary<int, ${RowClass}> _tempDictBy${convMemberName(f.name)};
-		public static ${RowClass} GetConfigBy${convMemberName(f.name)}(int ${convMemberName(f.name)})
+		protected static Dictionary<${getFieldType(f)}, ${RowClass}> _tempDictBy${convMemberName(f.name)};
+		public static ${RowClass} GetConfigBy${convMemberName(f.name)}(${getFieldType(f)} ${convMemberName(f.name)})
 		{
 			if (_tempDictBy${convMemberName(f.name)} == null)
 			{
-				_tempDictBy${convMemberName(f.name)} = new Dictionary<int, ${RowClass}>();
+				_tempDictBy${convMemberName(f.name)} = new Dictionary<${getFieldType(f)}, ${RowClass}>();
 				Configs.ForEach(c =>
 				{
 					_tempDictBy${convMemberName(f.name)}.Add(c.${convMemberName(f.name)}, c);
@@ -192,9 +194,19 @@ ${foreach(fields, f => {
 `
 		} else if (f.type == "number" || f.type == "string") {
 			return `
-		public static ${RowClass}[] GetConfigsBy${convMemberName(f.name)}(int ${convMemberName(f.name)})
+		protected static Dictionary<${getFieldType(f)}, ${RowClass}[]> _tempRecordsDictBy${convMemberName(f.name)} = new Dictionary<${getFieldType(f)}, ${RowClass}[]>();
+		public static ${RowClass}[] GetConfigsBy${convMemberName(f.name)}(${getFieldType(f)} ${convMemberName(f.name)})
 		{
-			return Configs.Where(c => c.${convMemberName(f.name)} == ${convMemberName(f.name)}).ToArray();
+			if (_tempRecordsDictBy${convMemberName(f.name)}.ContainsKey(${convMemberName(f.name)}))
+			{
+				return _tempRecordsDictBy${convMemberName(f.name)}.GetValueOrDefault(${convMemberName(f.name)});
+			}
+			else
+			{
+				var records = Configs.Where(c => c.${convMemberName(f.name)} == ${convMemberName(f.name)}).ToArray();
+				_tempRecordsDictBy${convMemberName(f.name)}.Add(${convMemberName(f.name)}, records);
+				return records;
+			}
 		}
 `
 		} else {
