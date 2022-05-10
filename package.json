@@ -4,7 +4,7 @@
   "description": "",
   "main": "./dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "pub": "npm-publish --token=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"
   },
   "repository": {
     "type": "git",
