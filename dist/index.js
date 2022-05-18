@@ -118,11 +118,12 @@ function export_stuff(paras) {
             return `new bool[]{${values.join(", ")}}`;
         }
         else if (t == "string") {
-            return `"${value}"`;
+            // return `"${value}"`
+            return JSON.stringify(value);
         }
         else if (t == "string[]") {
             let values = value;
-            return `new string[]{${values.map(v => `"${v}"`).join(", ")}}`;
+            return `new string[]{${values.map(v => JSON.stringify(v)).join(", ")}}`;
         }
         else if (t == "fk") {
             return `${value}`;

@@ -88,10 +88,11 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 			let values = value as boolean[]
 			return `new bool[]{${values.join(", ")}}`
 		} else if (t == "string") {
-			return `"${value}"`
+			// return `"${value}"`
+			return JSON.stringify(value)
 		} else if (t == "string[]") {
 			let values = value as string[]
-			return `new string[]{${values.map(v => `"${v}"`).join(", ")}}`
+			return `new string[]{${values.map(v => JSON.stringify(v)).join(", ")}}`
 		} else if (t == "fk") {
 			return `${value}`
 		} else if (t == "fk[]") {
