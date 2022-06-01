@@ -152,7 +152,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace MEEC.ExportedConfigs{
-public class ${RowClass} {
+public partial class ${RowClass} {
 
 	public static List<${RowClass}> Configs = new List<${RowClass}>()
 	{

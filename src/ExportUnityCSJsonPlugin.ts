@@ -2,22 +2,18 @@
 import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, OutFilePath } from "export-table-lib"
 import * as fs from "fs-extra"
 
-export function export_stuff(paras: HandleSheetParams): string | null {
+export function exportUJson(paras: HandleSheetParams): string | null {
 	let {
 		datas,
 		fields,
 		name,
 		objects,
+		table,
 	} = paras;
 
-	let mainField: Field = fields.find(f => f.type == "uid") ?? fields[0]
-	let jsonString = `
-{
-${foreach(objects, obj => `
-    "${obj[mainField.name]}" : ${JSON.stringify(obj)}
-`, ",\n")}
-}
-`
+	var fullName = `${table.workbookName}-${name}`
+	let jsonString = JSON.stringify(objects);
+
 	// !!!必须开头没有空格
 	let temp = `%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
@@ -31,9 +27,43 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 496f60086c072a8479a6e0b948efb5e8, type: 3}
-  m_Name: ${name}
+  m_Name: ${fullName}
   m_EditorClassIdentifier: 
   JsonText: ${JSON.stringify(jsonString)}
+`
+	return temp
+
+}
+
+export function exportUJsonLoader(paras: HandleSheetParams): string | null {
+	let {
+		datas,
+		fields,
+		name,
+		objects,
+		table,
+	} = paras;
+
+	var fullName = `${table.workbookName}-${name}`
+	// !!!必须开头没有空格
+	let temp = `
+using lang.json;
+using UnityEngine.AddressableAssets;
+
+namespace MEEC.ExportedConfigs
+{
+    public partial class ${name}
+    {
+        static ${name}()
+        {
+            var configJson = Addressables.LoadAssetAsync<ExcelConfigJson>("Assets/Bundles/GameConfig/Auto/${fullName}.asset").WaitForCompletion();
+            var jsonObjs = JSON.parse<${name}[]>(configJson.JsonText);
+            var configs = ${name}.Configs;
+            configs.Clear();
+            configs.AddRange(jsonObjs);
+        }
+    }
+}
 `
 	return temp
 
@@ -44,11 +74,21 @@ export class ExportUJsonPlugin extends PluginBase {
 	tags: string[] = ["ujson"]
 
 	handleSheet(paras: HandleSheetParams) {
-		let content = export_stuff(paras)
-		if (content != null) {
-			let savePath = new OutFilePath(paras.outPath, paras.table.name, ".asset").fullPath
-			fs.outputFileSync(savePath, content, "utf-8")
+		var fullName = `${paras.table.workbookName}-${paras.name}`
+		{
+			let content1 = exportUJsonLoader(paras)
+			if (content1 != null) {
+				let savePath = new OutFilePath(paras.outPath, fullName, "Loader.cs").fullPath
+				fs.outputFileSync(savePath, content1, "utf-8")
+			}
 		}
-		return content
+		{
+			let content2 = exportUJson(paras)
+			if (content2 != null) {
+				let savePath = new OutFilePath(paras.outPath, fullName, ".asset").fullPath
+				fs.outputFileSync(savePath, content2, "utf-8")
+			}
+			return content2
+		}
 	}
 }

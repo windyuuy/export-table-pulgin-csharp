@@ -23,20 +23,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ExportUJsonPlugin = exports.export_stuff = void 0;
+exports.ExportUJsonPlugin = exports.exportUJsonLoader = exports.exportUJson = void 0;
 const export_table_lib_1 = require("export-table-lib");
 const fs = __importStar(require("fs-extra"));
-function export_stuff(paras) {
-    var _a;
-    let { datas, fields, name, objects, } = paras;
-    let mainField = (_a = fields.find(f => f.type == "uid")) !== null && _a !== void 0 ? _a : fields[0];
-    let jsonString = `
-{
-${(0, export_table_lib_1.foreach)(objects, obj => `
-    "${obj[mainField.name]}" : ${JSON.stringify(obj)}
-`, ",\n")}
-}
-`;
+function exportUJson(paras) {
+    let { datas, fields, name, objects, table, } = paras;
+    var fullName = `${table.workbookName}-${name}`;
+    let jsonString = JSON.stringify(objects);
     // !!!必须开头没有空格
     let temp = `%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
@@ -50,13 +43,39 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 496f60086c072a8479a6e0b948efb5e8, type: 3}
-  m_Name: ${name}
+  m_Name: ${fullName}
   m_EditorClassIdentifier: 
   JsonText: ${JSON.stringify(jsonString)}
 `;
     return temp;
 }
-exports.export_stuff = export_stuff;
+exports.exportUJson = exportUJson;
+function exportUJsonLoader(paras) {
+    let { datas, fields, name, objects, table, } = paras;
+    var fullName = `${table.workbookName}-${name}`;
+    // !!!必须开头没有空格
+    let temp = `
+using lang.json;
+using UnityEngine.AddressableAssets;
+
+namespace MEEC.ExportedConfigs
+{
+    public partial class ${name}
+    {
+        static ${name}()
+        {
+            var configJson = Addressables.LoadAssetAsync<ExcelConfigJson>("Assets/Bundles/GameConfig/Auto/${fullName}.asset").WaitForCompletion();
+            var jsonObjs = JSON.parse<${name}[]>(configJson.JsonText);
+            var configs = ${name}.Configs;
+            configs.Clear();
+            configs.AddRange(jsonObjs);
+        }
+    }
+}
+`;
+    return temp;
+}
+exports.exportUJsonLoader = exportUJsonLoader;
 class ExportUJsonPlugin extends export_table_lib_1.PluginBase {
     constructor() {
         super(...arguments);
@@ -64,12 +83,22 @@ class ExportUJsonPlugin extends export_table_lib_1.PluginBase {
         this.tags = ["ujson"];
     }
     handleSheet(paras) {
-        let content = export_stuff(paras);
-        if (content != null) {
-            let savePath = new export_table_lib_1.OutFilePath(paras.outPath, paras.table.name, ".asset").fullPath;
-            fs.outputFileSync(savePath, content, "utf-8");
+        var fullName = `${paras.table.workbookName}-${paras.name}`;
+        {
+            let content1 = exportUJsonLoader(paras);
+            if (content1 != null) {
+                let savePath = new export_table_lib_1.OutFilePath(paras.outPath, fullName, "Loader.cs").fullPath;
+                fs.outputFileSync(savePath, content1, "utf-8");
+            }
         }
-        return content;
+        {
+            let content2 = exportUJson(paras);
+            if (content2 != null) {
+                let savePath = new export_table_lib_1.OutFilePath(paras.outPath, fullName, ".asset").fullPath;
+                fs.outputFileSync(savePath, content2, "utf-8");
+            }
+            return content2;
+        }
     }
 }
 exports.ExportUJsonPlugin = ExportUJsonPlugin;
