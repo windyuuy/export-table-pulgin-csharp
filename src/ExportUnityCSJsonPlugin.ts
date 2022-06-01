@@ -56,7 +56,7 @@ namespace MEEC.ExportedConfigs
     {
         static ${name}()
         {
-			var loadUrl="Assets/Bundles/GameConfig/Auto/${fullName}.asset";
+			var loadUrl="Assets/Bundles/GameConfigs/Auto/${fullName}.asset";
             var configJson = Addressables.LoadAssetAsync<ExcelConfigJson>(loadUrl).WaitForCompletion();
 			if (configJson != null)
             {
