@@ -11,8 +11,25 @@ export function exportUJson(paras: HandleSheetParams): string | null {
 		table,
 	} = paras;
 
+	let firstLetterUpper = function (str: string) {
+		return str.charAt(0).toUpperCase() + str.slice(1);
+	};
+	let firstLetterLower = function (str: string) {
+		return str.charAt(0).toLowerCase() + str.slice(1);
+	};
+	let convMemberName = function (str: string) {
+		return str.split("_").map(s => firstLetterUpper(s)).join("")
+	}
+
 	var fullName = `${table.workbookName}-${name}`
-	let jsonString = JSON.stringify(objects);
+	let jsonString = JSON.stringify(objects.map(obj => {
+		var newObj = Object.create(null);
+		Object.keys(obj).forEach(key => {
+			var newKey = convMemberName(key);
+			newObj[newKey] = obj[key];
+		})
+		return newObj
+	}));
 
 	// !!!必须开头没有空格
 	let temp = `%YAML 1.1

@@ -28,8 +28,24 @@ const export_table_lib_1 = require("export-table-lib");
 const fs = __importStar(require("fs-extra"));
 function exportUJson(paras) {
     let { datas, fields, name, objects, table, } = paras;
+    let firstLetterUpper = function (str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    };
+    let firstLetterLower = function (str) {
+        return str.charAt(0).toLowerCase() + str.slice(1);
+    };
+    let convMemberName = function (str) {
+        return str.split("_").map(s => firstLetterUpper(s)).join("");
+    };
     var fullName = `${table.workbookName}-${name}`;
-    let jsonString = JSON.stringify(objects);
+    let jsonString = JSON.stringify(objects.map(obj => {
+        var newObj = Object.create(null);
+        Object.keys(obj).forEach(key => {
+            var newKey = convMemberName(key);
+            newObj[newKey] = obj[key];
+        });
+        return newObj;
+    }));
     // !!!必须开头没有空格
     let temp = `%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
