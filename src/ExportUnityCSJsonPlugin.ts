@@ -56,11 +56,19 @@ namespace MEEC.ExportedConfigs
     {
         static ${name}()
         {
-            var configJson = Addressables.LoadAssetAsync<ExcelConfigJson>("Assets/Bundles/GameConfig/Auto/${fullName}.asset").WaitForCompletion();
-            var jsonObjs = JSON.parse<${name}[]>(configJson.JsonText);
-            var configs = ${name}.Configs;
-            configs.Clear();
-            configs.AddRange(jsonObjs);
+			var loadUrl="Assets/Bundles/GameConfig/Auto/${fullName}.asset";
+            var configJson = Addressables.LoadAssetAsync<ExcelConfigJson>(loadUrl).WaitForCompletion();
+			if (configJson != null)
+            {
+				var jsonObjs = JSON.parse<${name}[]>(configJson.JsonText);
+				var configs = ${name}.Configs;
+				configs.Clear();
+				configs.AddRange(jsonObjs);
+			}
+            else
+            {
+                Debug.LogError($"配表资源缺失: {loadUrl}");
+            }
         }
     }
 }
