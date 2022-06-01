@@ -1,9 +1,4 @@
-import { HandleSheetParams, PluginBase } from "export-table-lib";
-export declare function export_stuff(paras: HandleSheetParams): string | null;
-export declare class ExportPlugin extends PluginBase {
-    name: string;
-    tags: string[];
-    handleSheet(paras: HandleSheetParams): string | null;
-}
-export declare const ExportPlugins: ExportPlugin[];
+import { ExportPlugin as ExportCSPlugin } from "./ExportCSPlugin";
+import { ExportUJsonPlugin } from "./ExportUnityCSJsonPlugin";
+export declare const ExportPlugins: (ExportUJsonPlugin | ExportCSPlugin)[];
 //# sourceMappingURL=index.d.ts.map
