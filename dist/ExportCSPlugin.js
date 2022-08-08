@@ -45,10 +45,12 @@ function export_stuff(paras) {
     let getFieldType = function (f) {
         let t = f.type;
         if (t == "object") {
-            throw new Error("invalid type <object>");
+            //throw new Error("invalid type <Dictionary<string,string>>")
+            return "Dictionary<string,string>";
         }
         else if (t == "object[]") {
-            throw new Error("invalid type <object[]>");
+            //throw new Error("invalid type <Dictionary<string,string>[]>")
+            return "List<Dictionary<string,string>>";
         }
         else if (t == "number") {
             return "double";
@@ -95,10 +97,25 @@ function export_stuff(paras) {
     const genValue = (value, f) => {
         let t = f.type;
         if (t == "object") {
-            throw new Error("invalid type <object>");
+            //throw new Error("invalid type <object>")
+            let convert = [];
+            for (let k in value) {
+                convert.push(`{"${k}","${value[k].toString()}"}`);
+            }
+            ;
+            return `new Dictionary<string,string>(){${convert}}`;
         }
         else if (t == "object[]") {
-            throw new Error("invalid type <object[]>");
+            let values = value;
+            //throw new Error("invalid type <object[]>")
+            return `new List<Dictionary<string,string>>(){${values.map((val) => {
+                let convert = [];
+                for (let k in val) {
+                    convert.push(`{"${k}","${val[k].toString()}"}`);
+                }
+                ;
+                return `new Dictionary<string,string>(){${convert}}`;
+            })}}`;
         }
         else if (t == "number") {
             return `${value}`;
