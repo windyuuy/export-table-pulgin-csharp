@@ -1,6 +1,7 @@
 
 import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, iff } from "export-table-lib"
 import * as fs from "fs-extra"
+import { json } from "stream/consumers";
 
 export function export_stuff(paras: HandleSheetParams): string | null {
 	let {
@@ -33,9 +34,11 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 	let getFieldType = function (f: Field) {
 		let t = f.type
 		if (t == "object") {
-			throw new Error("invalid type <object>")
+			//throw new Error("invalid type <Dictionary<string,string>>")
+			return "Dictionary<string,string>"
 		} else if (t == "object[]") {
-			throw new Error("invalid type <object[]>")
+			//throw new Error("invalid type <Dictionary<string,string>[]>")
+			return "List<Dictionary<string,string>>"
 		} else if (t == "number") {
 			return "double";
 		} else if (t == "number[]") {
@@ -72,9 +75,22 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 	const genValue = (value: any, f: Field): string => {
 		let t = f.type
 		if (t == "object") {
-			throw new Error("invalid type <object>")
+			//throw new Error("invalid type <object>")
+			let convert:string[] = [];
+			for (let k in value) {
+				convert.push(`{"${k}","${(value as any)[k].toString()}"}`);
+			};
+			return  `new Dictionary<string,string>(){${convert}}`;
 		} else if (t == "object[]") {
-			throw new Error("invalid type <object[]>")
+			let values = value as object[];
+			//throw new Error("invalid type <object[]>")
+			return `new List<Dictionary<string,string>>(){${values.map((val)=>{
+				let convert:string[] = [];
+				for (let k in val) {
+                    convert.push(`{"${k}","${(val as any)[k].toString()}"}`);
+                };
+                return  `new Dictionary<string,string>(){${convert}}`;
+			})}}`
 		} else if (t == "number") {
 			return `${value}`
 		} else if (t == "number[]") {
