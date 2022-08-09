@@ -43,6 +43,14 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 			return "double";
 		} else if (t == "number[]") {
 			return "double[]";
+		} else if (t == "int") {
+			return "int";
+		} else if (t == "int[]") {
+			return "int[]";
+		} else if (t == "long") {
+			return "long";
+		} else if (t == "long[]") {
+			return "long[]";
 		} else if (t == "uid") {
 			return "int";
 		} else if (t == "bool") {
@@ -59,11 +67,11 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 			return "int[]";
 		} else if (t == "any") {
 			console.log(f)
-			throw new Error(`invalid type ${f.name}:<any>`)
+			throw new Error(`invalid type ${f.name}:<${f.rawType} => any>`)
 		} else if (t == "key") {
 			return "string";
 		} else {
-			throw new Error(`invalid type ${f.name}:<unkown>`)
+			throw new Error(`invalid type ${f.name}:<${f.rawType} => unkown>`)
 		}
 		return t;
 	}
@@ -76,26 +84,32 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 		let t = f.type
 		if (t == "object") {
 			//throw new Error("invalid type <object>")
-			let convert:string[] = [];
+			let convert: string[] = [];
 			for (let k in value) {
 				convert.push(`{"${k}","${(value as any)[k].toString()}"}`);
 			};
-			return  `new Dictionary<string,string>(){${convert}}`;
+			return `new Dictionary<string,string>(){${convert}}`;
 		} else if (t == "object[]") {
 			let values = value as object[];
 			//throw new Error("invalid type <object[]>")
-			return `new List<Dictionary<string,string>>(){${values.map((val)=>{
-				let convert:string[] = [];
+			return `new List<Dictionary<string,string>>(){${values.map((val) => {
+				let convert: string[] = [];
 				for (let k in val) {
-                    convert.push(`{"${k}","${(val as any)[k].toString()}"}`);
-                };
-                return  `new Dictionary<string,string>(){${convert}}`;
+					convert.push(`{"${k}","${(val as any)[k].toString()}"}`);
+				};
+				return `new Dictionary<string,string>(){${convert}}`;
 			})}}`
-		} else if (t == "number") {
+		} else if (t == "number" || t == "int" || t == "long") {
 			return `${value}`
 		} else if (t == "number[]") {
 			let values = value as number[]
 			return `new double[]{${values.join(", ")}}`
+		} else if (t == "int[]") {
+			let values = value as number[]
+			return `new int[]{${values.join(", ")}}`
+		} else if (t == "long[]") {
+			let values = value as number[]
+			return `new long[]{${values.join(", ")}}`
 		} else if (t == "uid") {
 			return `${value}`
 		} else if (t == "bool") {
@@ -116,12 +130,12 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 			return `new int[]{${values.join(", ")}}`
 		} else if (t == "any") {
 			console.log(f)
-			throw new Error(`invalid type ${f.name}:<any>`)
+			throw new Error(`invalid type ${f.name}:<${f.rawType} => any>`)
 		} else if (t == "key") {
 			return `${value}`
 		}
 
-		throw new Error(`invalid type ${f.name}:<unkown>`)
+		throw new Error(`invalid type ${f.name}:<${f.rawType} => unkown>`)
 	}
 
 	const getTitle = (v: Field) => {
@@ -209,7 +223,7 @@ ${foreach(fields, f => {
 			return _tempDictBy${convMemberName(f.name)}.GetValueOrDefault(${convMemberName(f.name)});
 		}
 `
-		} else if (f.type == "number" || f.type == "string") {
+		} else if (f.type == "number" || f.type == "int" || f.type == "long" || f.type == "string") {
 			return `
 		protected static Dictionary<${getFieldType(f)}, ${RowClass}[]> _tempRecordsDictBy${convMemberName(f.name)} = new Dictionary<${getFieldType(f)}, ${RowClass}[]>();
 		public static ${RowClass}[] GetConfigsBy${convMemberName(f.name)}(${getFieldType(f)} ${convMemberName(f.name)})

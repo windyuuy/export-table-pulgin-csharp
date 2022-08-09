@@ -58,6 +58,18 @@ function export_stuff(paras) {
         else if (t == "number[]") {
             return "double[]";
         }
+        else if (t == "int") {
+            return "int";
+        }
+        else if (t == "int[]") {
+            return "int[]";
+        }
+        else if (t == "long") {
+            return "long";
+        }
+        else if (t == "long[]") {
+            return "long[]";
+        }
         else if (t == "uid") {
             return "int";
         }
@@ -81,13 +93,13 @@ function export_stuff(paras) {
         }
         else if (t == "any") {
             console.log(f);
-            throw new Error(`invalid type ${f.name}:<any>`);
+            throw new Error(`invalid type ${f.name}:<${f.rawType} => any>`);
         }
         else if (t == "key") {
             return "string";
         }
         else {
-            throw new Error(`invalid type ${f.name}:<unkown>`);
+            throw new Error(`invalid type ${f.name}:<${f.rawType} => unkown>`);
         }
         return t;
     };
@@ -117,12 +129,20 @@ function export_stuff(paras) {
                 return `new Dictionary<string,string>(){${convert}}`;
             })}}`;
         }
-        else if (t == "number") {
+        else if (t == "number" || t == "int" || t == "long") {
             return `${value}`;
         }
         else if (t == "number[]") {
             let values = value;
             return `new double[]{${values.join(", ")}}`;
+        }
+        else if (t == "int[]") {
+            let values = value;
+            return `new int[]{${values.join(", ")}}`;
+        }
+        else if (t == "long[]") {
+            let values = value;
+            return `new long[]{${values.join(", ")}}`;
         }
         else if (t == "uid") {
             return `${value}`;
@@ -151,12 +171,12 @@ function export_stuff(paras) {
         }
         else if (t == "any") {
             console.log(f);
-            throw new Error(`invalid type ${f.name}:<any>`);
+            throw new Error(`invalid type ${f.name}:<${f.rawType} => any>`);
         }
         else if (t == "key") {
             return `${value}`;
         }
-        throw new Error(`invalid type ${f.name}:<unkown>`);
+        throw new Error(`invalid type ${f.name}:<${f.rawType} => unkown>`);
     };
     const getTitle = (v) => {
         return v.describe.split("\n")[0];
@@ -233,7 +253,7 @@ ${(0, export_table_lib_1.foreach)(fields, f => {
 		}
 `;
         }
-        else if (f.type == "number" || f.type == "string") {
+        else if (f.type == "number" || f.type == "int" || f.type == "long" || f.type == "string") {
             return `
 		protected static Dictionary<${getFieldType(f)}, ${RowClass}[]> _tempRecordsDictBy${convMemberName(f.name)} = new Dictionary<${getFieldType(f)}, ${RowClass}[]>();
 		public static ${RowClass}[] GetConfigsBy${convMemberName(f.name)}(${getFieldType(f)} ${convMemberName(f.name)})
