@@ -73,15 +73,16 @@ function exportUJsonLoader(paras) {
     let temp = `
 using lang.json;
 using UnityEngine.AddressableAssets;
+using System.Threading.Tasks;
 
 namespace MEEC.ExportedConfigs
 {
     public partial class ${name}
     {
-        static ${name}()
+        public static async Task Load()
         {
 			var loadUrl="Assets/Bundles/GameConfigs/Auto/${fullName}.asset";
-            var configJson = Addressables.LoadAssetAsync<ExcelConfigJson>(loadUrl).WaitForCompletion();
+            var configJson = await Addressables.LoadAssetAsync<ExcelConfigJson>(loadUrl).Task;
 			if (configJson != null)
             {
 				var jsonObjs = JSON.parse<${name}[]>(configJson.JsonText);
@@ -123,6 +124,28 @@ class ExportUJsonPlugin extends export_table_lib_1.PluginBase {
             }
             return content2;
         }
+    }
+    handleBatch(paras) {
+        var tables = paras.tables;
+        var temp = `
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace MEEC.ExportedConfigs
+{
+	public static class DefaultConfigLoader{
+		public static IEnumerable<Func<Task>> Load(){
+${(0, export_table_lib_1.foreach)(tables, (table) => `
+			yield return ${table.name}.Load;
+`)}
+			yield break;
+		}
+	}
+}
+`;
+        let savePath = paras.outPath + "/DefaultConfigLoader.cs";
+        fs.outputFileSync(savePath, temp, "utf-8");
     }
 }
 exports.ExportUJsonPlugin = ExportUJsonPlugin;
