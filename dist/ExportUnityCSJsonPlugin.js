@@ -26,11 +26,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExportUJsonPlugin = exports.exportUJsonLoader = exports.exportUJson = void 0;
 const export_table_lib_1 = require("export-table-lib");
 const fs = __importStar(require("fs-extra"));
+let firstLetterUpper = function (str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+};
 function exportUJson(paras) {
     let { datas, fields, name, objects, table, } = paras;
-    let firstLetterUpper = function (str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    };
     let firstLetterLower = function (str) {
         return str.charAt(0).toLowerCase() + str.slice(1);
     };
@@ -68,16 +68,18 @@ MonoBehaviour:
 exports.exportUJson = exportUJson;
 function exportUJsonLoader(paras) {
     let { datas, fields, name, objects, table, } = paras;
+    let RowClass = firstLetterUpper(name);
     var fullName = `${table.workbookName}-${name}`;
     // !!!必须开头没有空格
     let temp = `
 using lang.json;
 using UnityEngine.AddressableAssets;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace MEEC.ExportedConfigs
 {
-    public partial class ${name}
+    public partial class ${RowClass}
     {
         public static async Task Load()
         {
@@ -85,8 +87,8 @@ namespace MEEC.ExportedConfigs
             var configJson = await Addressables.LoadAssetAsync<ExcelConfigJson>(loadUrl).Task;
 			if (configJson != null)
             {
-				var jsonObjs = JSON.parse<${name}[]>(configJson.JsonText);
-				var configs = ${name}.Configs;
+				var jsonObjs = JSON.parse<${RowClass}[]>(configJson.JsonText);
+				var configs = ${RowClass}.Configs;
 				configs.Clear();
 				configs.AddRange(jsonObjs);
 			}
@@ -137,7 +139,7 @@ namespace MEEC.ExportedConfigs
 	public static class DefaultConfigLoader{
 		public static IEnumerable<Func<Task>> Load(){
 ${(0, export_table_lib_1.foreach)(tables, (table) => `
-			yield return ${table.name}.Load;
+			yield return ${firstLetterUpper(table.name)}.Load;
 `)}
 			yield break;
 		}
