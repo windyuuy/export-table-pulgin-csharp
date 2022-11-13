@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExportPlugin = exports.export_stuff = void 0;
 const export_table_lib_1 = require("export-table-lib");
 const fs = __importStar(require("fs-extra"));
+var isSkipExportDefaults = process.argv.findIndex(v => v == "--SkipDefaults") >= 0;
 function export_stuff(paras) {
     let { datas, fields, inject, name, objects, packagename, tables, xxtea, } = paras;
     let firstLetterUpper = function (str) {
@@ -193,7 +194,9 @@ public partial class ${RowClass} {
 
 	public static List<${RowClass}> Configs = new List<${RowClass}>()
 	{
+${(0, export_table_lib_1.iff)(!isSkipExportDefaults, () => `
 ${(0, export_table_lib_1.foreach)(datas, data => `		new ${RowClass}(${(0, export_table_lib_1.st)(() => fields.map((f, index) => genValue(data[index], f)).join(", "))}),`)}
+`)}
 	};
 
 	public ${RowClass}() { }

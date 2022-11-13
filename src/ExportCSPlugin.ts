@@ -3,6 +3,8 @@ import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, Handle
 import * as fs from "fs-extra"
 import { json } from "stream/consumers";
 
+var isSkipExportDefaults = process.argv.findIndex(v => v == "--SkipDefaults") >= 0
+
 export function export_stuff(paras: HandleSheetParams): string | null {
 	let {
 		datas,
@@ -155,9 +157,11 @@ public partial class ${RowClass} {
 
 	public static List<${RowClass}> Configs = new List<${RowClass}>()
 	{
+${iff(!isSkipExportDefaults, () => `
 ${foreach(datas, data =>
-		`		new ${RowClass}(${st(() => fields.map((f, index) => genValue(data[index], f)).join(", "))}),`
-	)}
+	`		new ${RowClass}(${st(() => fields.map((f, index) => genValue(data[index], f)).join(", "))}),`
+)}
+`)}
 	};
 
 	public ${RowClass}() { }
