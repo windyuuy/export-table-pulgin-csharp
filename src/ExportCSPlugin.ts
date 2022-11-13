@@ -262,7 +262,7 @@ ${iff(getFkFieldType(f).toLowerCase() != "uid", () => `
 				if(null==this.${convMemberName(f.name)}){
 					this._fk${convMemberName(f.name)} = new ${convMemberName(f.fkTableName!)}[0];
 				}else{
-					this._fk${convMemberName(f.name)}=${convMemberName(f.fkTableName!)}.FindAll(a=>a.${convMemberName(f.fkFieldName!)}!=null && this.${convMemberName(f.name)}==a.${convMemberName(f.fkFieldName!)}).ToArray();
+					this._fk${convMemberName(f.name)}=${convMemberName(f.fkTableName!)}.Configs.FindAll(a=>a.${convMemberName(f.fkFieldName!)}!=null && this.${convMemberName(f.name)}==a.${convMemberName(f.fkFieldName!)}).ToArray();
 				}
 			}
 			return this._fk${convMemberName(f.name)};
@@ -276,7 +276,7 @@ ${iff(getFkFieldType(f).toLowerCase() != "uid", () => `
 	public virtual ${convMemberName(f.fkTableName!)} ${convMemberName(f.name)}Data{
 		get{
 			if(this._fk${convMemberName(f.name)}==null){
-				this._fk${convMemberName(f.name)}=${convMemberName(f.fkTableName!)}.Find(a=>a.${convMemberName(f.fkFieldName!)}==this.${convMemberName(f.name)});
+				this._fk${convMemberName(f.name)}=${convMemberName(f.fkTableName!)}.Configs.Find(a=>a.${convMemberName(f.fkFieldName!)}==this.${convMemberName(f.name)});
 			}
 			return this._fk${convMemberName(f.name)};
 		}
