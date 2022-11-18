@@ -153,6 +153,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace MEEC.ExportedConfigs{
+[System.Serializable]
 public partial class ${RowClass} {
 
 	public static List<${RowClass}> Configs = new List<${RowClass}>()
