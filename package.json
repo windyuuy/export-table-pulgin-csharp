@@ -1,6 +1,6 @@
 {
   "name": "export-table-pulgin-csharp",
-  "version": "1.0.59",
+  "version": "1.0.64",
   "description": "",
   "main": "./dist/index.js",
   "scripts": {
