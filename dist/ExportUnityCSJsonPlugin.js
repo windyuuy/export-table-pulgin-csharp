@@ -82,6 +82,12 @@ namespace MEEC.ExportedConfigs
 {
 	public partial class ${RowClass}
 	{
+#if UNITY_EDITOR && ENABLE_CONFIG_LOG
+		static ${RowClass}()
+		{
+			Debug.Log("ReferConfig-${RowClass}");
+		}
+#endif
 		public static async Task Load()
 		{
 			var loadUrl="Assets/Bundles/GameConfigs/Auto/${fullName}.json";
