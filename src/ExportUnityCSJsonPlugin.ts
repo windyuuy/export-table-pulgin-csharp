@@ -1,10 +1,8 @@
 
-import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, OutFilePath } from "export-table-lib"
+import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, OutFilePath, makeFirstLetterUpper } from "export-table-lib"
 import * as fs from "fs-extra"
 
-let firstLetterUpper = function (str: string) {
-	return str.charAt(0).toUpperCase() + str.slice(1);
-};
+let firstLetterUpper = makeFirstLetterUpper;
 export function exportUJson(paras: HandleSheetParams): string | null {
 	let {
 		datas,
