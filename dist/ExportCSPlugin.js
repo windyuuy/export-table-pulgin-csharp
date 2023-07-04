@@ -116,7 +116,7 @@ function export_stuff(paras) {
                 convert.push(`{"${k}","${value[k].toString()}"}`);
             }
             ;
-            return `new Dictionary<string,string>(){${convert}}`;
+            return `new Dictionary<string,string>(${convert.length}){${convert}}`;
         }
         else if (t == "object[]") {
             let values = value;
@@ -127,7 +127,7 @@ function export_stuff(paras) {
                     convert.push(`{"${k}","${val[k].toString()}"}`);
                 }
                 ;
-                return `new Dictionary<string,string>(){${convert}}`;
+                return `new Dictionary<string,string>(${convert.length}){${convert}}`;
             })}}`;
         }
         else if (t == "number" || t == "int" || t == "long") {
@@ -247,11 +247,12 @@ ${(0, export_table_lib_1.foreach)(fields, f => {
 		{
 			if (_tempDictBy${convMemberName(f.name)} == null)
 			{
-				_tempDictBy${convMemberName(f.name)} = new Dictionary<${getFieldType(f)}, ${RowClass}>();
-				Configs.ForEach(c =>
+				_tempDictBy${convMemberName(f.name)} = new Dictionary<${getFieldType(f)}, ${RowClass}>(Configs.Count);
+				for(var i = 0; i < Configs.Count; i++)
 				{
+					var c = Configs[i];
 					_tempDictBy${convMemberName(f.name)}.Add(c.${convMemberName(f.name)}, c);
-				});
+				}
 			}
 			return _tempDictBy${convMemberName(f.name)}.GetValueOrDefault(${convMemberName(f.name)});
 		}
@@ -259,7 +260,7 @@ ${(0, export_table_lib_1.foreach)(fields, f => {
         }
         else if (f.type == "number" || f.type == "int" || f.type == "long" || f.type == "string") {
             return `
-		protected static Dictionary<${getFieldType(f)}, ${RowClass}[]> _tempRecordsDictBy${convMemberName(f.name)} = new Dictionary<${getFieldType(f)}, ${RowClass}[]>();
+		protected static Dictionary<${getFieldType(f)}, ${RowClass}[]> _tempRecordsDictBy${convMemberName(f.name)} = new Dictionary<${getFieldType(f)}, ${RowClass}[]>(Configs.Count);
 		public static ${RowClass}[] GetConfigsBy${convMemberName(f.name)}(${getFieldType(f)} ${convMemberName(f.name)})
 		{
 			if (_tempRecordsDictBy${convMemberName(f.name)}.ContainsKey(${convMemberName(f.name)}))
@@ -268,7 +269,7 @@ ${(0, export_table_lib_1.foreach)(fields, f => {
 			}
 			else
 			{
-				var records = Configs.Where(c => c.${convMemberName(f.name)} == ${convMemberName(f.name)}).ToArray();
+				var records = Configs.Where(c => c.${convMemberName(f.name)} == ${convMemberName(f.name)});//.ToArray();
 				_tempRecordsDictBy${convMemberName(f.name)}.Add(${convMemberName(f.name)}, records);
 				return records;
 			}
