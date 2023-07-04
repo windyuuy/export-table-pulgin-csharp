@@ -242,7 +242,7 @@ ${(0, export_table_lib_1.foreach)(fields, f => {
 ${(0, export_table_lib_1.foreach)(fields, f => {
         if (f.isUnique) {
             let memberName = convMemberName(f.name);
-            let tempDictByMemberName = `_tempDictBy${memberName}`;
+            let tempDictByMemberName = `tempDictBy${memberName}`;
             let memberType = getFieldType(f);
             return `
 		protected static Dictionary<${memberType}, ${RowClass}> ${tempDictByMemberName};
@@ -263,19 +263,23 @@ ${(0, export_table_lib_1.foreach)(fields, f => {
         }
         else if (f.type == "number" || f.type == "int" || f.type == "long" || f.type == "string") {
             let memberName = convMemberName(f.name);
-            let tempRecordsDictByMemberName = `_tempRecordsDictBy${memberName}`;
+            let tempRecordsDictByMemberName = `tempRecordsDictBy${memberName}`;
             let memberType = getFieldType(f);
             return `
-		protected static Dictionary<${memberType}, ${RowClass}[]> ${tempRecordsDictByMemberName} = new Dictionary<${memberType}, ${RowClass}[]>(Configs.Count);
+		protected static Dictionary<${memberType}, ${RowClass}[]> ${tempRecordsDictByMemberName};
 		public static ${RowClass}[] GetConfigsBy${memberName}(${memberType} ${memberName})
 		{
-			if (${tempRecordsDictByMemberName}.ContainsKey(${memberName}))
+			if (${tempRecordsDictByMemberName} != null && ${tempRecordsDictByMemberName}.TryGetValue(${memberName},out var retValue))
 			{
-				return ${tempRecordsDictByMemberName}.GetValueOrDefault(${memberName});
+				return retValue;
 			}
 			else
 			{
-				var records = Configs.Where(c => c.${memberName} == ${memberName});//.ToArray();
+				if (${tempRecordsDictByMemberName} == null)
+				{
+					${tempRecordsDictByMemberName} = new Dictionary<${memberType}, ${RowClass}[]>(Configs.Count);
+				}
+				var records = Configs.Where(c => c.${memberName} == ${memberName}).ToArray();
 				${tempRecordsDictByMemberName}.Add(${memberName}, records);
 				return records;
 			}
