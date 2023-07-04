@@ -213,35 +213,41 @@ ${foreach(fields, f => {
 #region uid map
 ${foreach(fields, f => {
 		if (f.isUnique) {
+			let memberName = convMemberName(f.name);
+			let tempDictByMemberName = `_tempDictBy${memberName}`;
+			let memberType = getFieldType(f);
 			return `
-		protected static Dictionary<${getFieldType(f)}, ${RowClass}> _tempDictBy${convMemberName(f.name)};
-		public static ${RowClass} GetConfigBy${convMemberName(f.name)}(${getFieldType(f)} ${convMemberName(f.name)})
+		protected static Dictionary<${memberType}, ${RowClass}> ${tempDictByMemberName};
+		public static ${RowClass} GetConfigBy${memberName}(${memberType} ${memberName})
 		{
-			if (_tempDictBy${convMemberName(f.name)} == null)
+			if (${tempDictByMemberName} == null)
 			{
-				_tempDictBy${convMemberName(f.name)} = new Dictionary<${getFieldType(f)}, ${RowClass}>(Configs.Count);
+				${tempDictByMemberName} = new Dictionary<${memberType}, ${RowClass}>(Configs.Count);
 				for(var i = 0; i < Configs.Count; i++)
 				{
 					var c = Configs[i];
-					_tempDictBy${convMemberName(f.name)}.Add(c.${convMemberName(f.name)}, c);
+					${tempDictByMemberName}.Add(c.${memberName}, c);
 				}
 			}
-			return _tempDictBy${convMemberName(f.name)}.GetValueOrDefault(${convMemberName(f.name)});
+			return ${tempDictByMemberName}.GetValueOrDefault(${memberName});
 		}
 `
 		} else if (f.type == "number" || f.type == "int" || f.type == "long" || f.type == "string") {
+			let memberName = convMemberName(f.name);
+			let tempRecordsDictByMemberName = `_tempRecordsDictBy${memberName}`;
+			let memberType = getFieldType(f);
 			return `
-		protected static Dictionary<${getFieldType(f)}, ${RowClass}[]> _tempRecordsDictBy${convMemberName(f.name)} = new Dictionary<${getFieldType(f)}, ${RowClass}[]>(Configs.Count);
-		public static ${RowClass}[] GetConfigsBy${convMemberName(f.name)}(${getFieldType(f)} ${convMemberName(f.name)})
+		protected static Dictionary<${memberType}, ${RowClass}[]> ${tempRecordsDictByMemberName} = new Dictionary<${memberType}, ${RowClass}[]>(Configs.Count);
+		public static ${RowClass}[] GetConfigsBy${memberName}(${memberType} ${memberName})
 		{
-			if (_tempRecordsDictBy${convMemberName(f.name)}.ContainsKey(${convMemberName(f.name)}))
+			if (${tempRecordsDictByMemberName}.ContainsKey(${memberName}))
 			{
-				return _tempRecordsDictBy${convMemberName(f.name)}.GetValueOrDefault(${convMemberName(f.name)});
+				return ${tempRecordsDictByMemberName}.GetValueOrDefault(${memberName});
 			}
 			else
 			{
-				var records = Configs.Where(c => c.${convMemberName(f.name)} == ${convMemberName(f.name)});//.ToArray();
-				_tempRecordsDictBy${convMemberName(f.name)}.Add(${convMemberName(f.name)}, records);
+				var records = Configs.Where(c => c.${memberName} == ${memberName});//.ToArray();
+				${tempRecordsDictByMemberName}.Add(${memberName}, records);
 				return records;
 			}
 		}
