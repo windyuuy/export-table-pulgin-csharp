@@ -229,6 +229,12 @@ ${foreach(fields, f => {
 					${tempDictByMemberName}.Add(c.${memberName}, c);
 				}
 			}
+#if UNITY_EDITOR
+			if (${tempDictByMemberName}.Count != Configs.Count)
+			{
+				UnityEngine.Debug.LogError($"配表数据不一致(ConfigsUnmatched): {${tempDictByMemberName}.Count}!={Configs.Count}");
+			}
+#endif
 			return ${tempDictByMemberName}.GetValueOrDefault(${memberName});
 		}
 `
