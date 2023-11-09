@@ -2,6 +2,8 @@
 import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, OutFilePath, makeFirstLetterUpper } from "export-table-lib"
 import * as fs from "fs-extra"
 
+var isSkipIndexLoader0 = process.argv.findIndex(v => v == "--SkipIndexLoader") >= 0
+
 let firstLetterUpper = makeFirstLetterUpper;
 export function exportUJson(paras: HandleSheetParams): string | null {
 	let {
@@ -104,9 +106,9 @@ namespace MEEC.ExportedConfigs
 		}
 
 #if UNITY_EDITOR
-		public static void LoadInEditor()
+		public static void LoadInEditor(bool force = false)
 		{
-			if (Application.isPlaying)
+			if (Application.isPlaying && (!force))
 			{
 				var tip = $"cannot load ${RowClass}[] with LoadInEditor at runtime";
 				Debug.LogError(tip);
@@ -158,6 +160,16 @@ export class ExportUJsonPlugin extends PluginBase {
 	}
 
 	handleBatch(paras: HandleBatchParams): void {
+
+		let moreOptions = paras.moreOptions
+		let isSkipIndexLoader = !!moreOptions.SkipIndexLoader ?? false
+		if (isSkipIndexLoader0) {
+			isSkipIndexLoader = true
+		}
+		if (isSkipIndexLoader) {
+			return;
+		}
+
 		var tables = paras.tables;
 		var temp = `
 using System;
@@ -168,7 +180,7 @@ namespace MEEC.ExportedConfigs
 {
 	public static class DefaultConfigLoader{
 		public static IEnumerable<Func<Task>> Load(){
-${foreach(tables, (table) => `
+${foreach(tables.sort((ta, tb) => ta.name.localeCompare(tb.name)), (table) => `
 			yield return ${firstLetterUpper(table.name)}.Load;
 `)}
 			yield break;

@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExportUJsonPlugin = exports.exportUJsonLoader = exports.exportUJson = void 0;
 const export_table_lib_1 = require("export-table-lib");
 const fs = __importStar(require("fs-extra"));
+var isSkipIndexLoader0 = process.argv.findIndex(v => v == "--SkipIndexLoader") >= 0;
 let firstLetterUpper = export_table_lib_1.makeFirstLetterUpper;
 function exportUJson(paras) {
     let { datas, fields, name, objects, table, } = paras;
@@ -110,9 +111,9 @@ namespace MEEC.ExportedConfigs
 		}
 
 #if UNITY_EDITOR
-		public static void LoadInEditor()
+		public static void LoadInEditor(bool force = false)
 		{
-			if (Application.isPlaying)
+			if (Application.isPlaying && (!force))
 			{
 				var tip = $"cannot load ${RowClass}[] with LoadInEditor at runtime";
 				Debug.LogError(tip);
@@ -164,6 +165,15 @@ class ExportUJsonPlugin extends export_table_lib_1.PluginBase {
         }
     }
     handleBatch(paras) {
+        var _a;
+        let moreOptions = paras.moreOptions;
+        let isSkipIndexLoader = (_a = !!moreOptions.SkipIndexLoader) !== null && _a !== void 0 ? _a : false;
+        if (isSkipIndexLoader0) {
+            isSkipIndexLoader = true;
+        }
+        if (isSkipIndexLoader) {
+            return;
+        }
         var tables = paras.tables;
         var temp = `
 using System;
@@ -174,7 +184,7 @@ namespace MEEC.ExportedConfigs
 {
 	public static class DefaultConfigLoader{
 		public static IEnumerable<Func<Task>> Load(){
-${(0, export_table_lib_1.foreach)(tables, (table) => `
+${(0, export_table_lib_1.foreach)(tables.sort((ta, tb) => ta.name.localeCompare(tb.name)), (table) => `
 			yield return ${firstLetterUpper(table.name)}.Load;
 `)}
 			yield break;

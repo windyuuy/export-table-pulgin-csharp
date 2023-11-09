@@ -26,9 +26,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExportPlugin = exports.export_stuff = void 0;
 const export_table_lib_1 = require("export-table-lib");
 const fs = __importStar(require("fs-extra"));
-var isSkipExportDefaults = process.argv.findIndex(v => v == "--SkipDefaults") >= 0;
+var isSkipExportDefaults0 = process.argv.findIndex(v => v == "--SkipDefaults") >= 0;
 function export_stuff(paras) {
-    let { datas, fields, inject, name, objects, packagename, tables, xxtea, } = paras;
+    var _a;
+    let { datas, fields, inject, name, objects, packagename, tables, xxtea, moreOptions, } = paras;
+    let isSkipExportDefaults = (_a = !!moreOptions.SkipDefaults) !== null && _a !== void 0 ? _a : false;
+    if (isSkipExportDefaults0) {
+        isSkipExportDefaults = true;
+    }
     let firstLetterUpper = function (str) {
         return str.charAt(0).toUpperCase() + str.slice(1);
     };

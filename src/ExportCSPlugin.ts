@@ -1,9 +1,8 @@
 
 import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, iff } from "export-table-lib"
 import * as fs from "fs-extra"
-import { json } from "stream/consumers";
 
-var isSkipExportDefaults = process.argv.findIndex(v => v == "--SkipDefaults") >= 0
+var isSkipExportDefaults0 = process.argv.findIndex(v => v == "--SkipDefaults") >= 0
 
 export function export_stuff(paras: HandleSheetParams): string | null {
 	let {
@@ -15,7 +14,13 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 		packagename,
 		tables,
 		xxtea,
+		moreOptions,
 	} = paras;
+
+	let isSkipExportDefaults = !!moreOptions.SkipDefaults ?? false
+	if (isSkipExportDefaults0) {
+		isSkipExportDefaults = true
+	}
 
 	let firstLetterUpper = function (str: string) {
 		return str.charAt(0).toUpperCase() + str.slice(1);
