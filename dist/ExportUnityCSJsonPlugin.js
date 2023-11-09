@@ -67,7 +67,12 @@ function exportUJson(paras) {
 }
 exports.exportUJson = exportUJson;
 function exportUJsonLoader(paras) {
-    let { datas, fields, name, objects, table, } = paras;
+    let { datas, fields, name, objects, table, exportNamespace, } = paras;
+    let jsonToolNamespaceIndex = process.argv.findIndex(v => v == "--JsonToolNamespace");
+    let jsonToolNamespace = "lang.json";
+    if (jsonToolNamespaceIndex >= 0 && process.argv.length > jsonToolNamespaceIndex + 1) {
+        jsonToolNamespace = process.argv[jsonToolNamespaceIndex + 1];
+    }
     let RowClass = firstLetterUpper(name);
     var fullName = `${table.workbookName}-${name}`;
     // !!!必须开头没有空格
@@ -75,9 +80,9 @@ function exportUJsonLoader(paras) {
 using UnityEngine.AddressableAssets;
 using System.Threading.Tasks;
 using UnityEngine;
-using lang.json;
+using ${jsonToolNamespace};
 
-namespace MEEC.ExportedConfigs
+namespace ${exportNamespace}
 {
 	public partial class ${RowClass}
 	{
@@ -166,7 +171,7 @@ class ExportUJsonPlugin extends export_table_lib_1.PluginBase {
     }
     handleBatch(paras) {
         var _a;
-        let moreOptions = paras.moreOptions;
+        let { moreOptions, tables, exportNamespace, } = paras;
         let isSkipIndexLoader = (_a = !!moreOptions.SkipIndexLoader) !== null && _a !== void 0 ? _a : false;
         if (isSkipIndexLoader0) {
             isSkipIndexLoader = true;
@@ -174,13 +179,12 @@ class ExportUJsonPlugin extends export_table_lib_1.PluginBase {
         if (isSkipIndexLoader) {
             return;
         }
-        var tables = paras.tables;
         var temp = `
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MEEC.ExportedConfigs
+namespace ${exportNamespace}
 {
 	public static class DefaultConfigLoader{
 		public static IEnumerable<Func<Task>> Load(){

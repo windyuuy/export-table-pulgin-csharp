@@ -1,1 +1,0 @@
-{"version":3,"file":"ExportUnityCSJsonPluginV1.d.ts","sourceRoot":"","sources":["../src/ExportUnityCSJsonPluginV1.ts"],"names":[],"mappings":"AACA,OAAO,EAAO,iBAAiB,EAA+B,UAAU,EAAE,iBAAiB,EAAqC,MAAM,kBAAkB,CAAA;AAgGxJ,qBAAa,mBAAoB,SAAQ,UAAU;IAClD,IAAI,SAAW;IACf,IAAI,EAAE,MAAM,EAAE,CAAa;IAE3B,WAAW,CAAC,KAAK,EAAE,iBAAiB;IAmBpC,WAAW,CAAC,KAAK,EAAE,iBAAiB,GAAG,IAAI;CAsB3C"}

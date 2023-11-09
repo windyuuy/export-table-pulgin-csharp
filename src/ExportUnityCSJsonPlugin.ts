@@ -61,7 +61,14 @@ export function exportUJsonLoader(paras: HandleSheetParams): string | null {
 		name,
 		objects,
 		table,
+		exportNamespace,
 	} = paras;
+
+	let jsonToolNamespaceIndex = process.argv.findIndex(v => v == "--JsonToolNamespace")
+	let jsonToolNamespace = "lang.json";
+	if(jsonToolNamespaceIndex>=0 && process.argv.length>jsonToolNamespaceIndex+1){
+		jsonToolNamespace = process.argv[jsonToolNamespaceIndex+1]
+	}
 
 	let RowClass = firstLetterUpper(name)
 	var fullName = `${table.workbookName}-${name}`
@@ -70,9 +77,9 @@ export function exportUJsonLoader(paras: HandleSheetParams): string | null {
 using UnityEngine.AddressableAssets;
 using System.Threading.Tasks;
 using UnityEngine;
-using lang.json;
+using ${jsonToolNamespace};
 
-namespace MEEC.ExportedConfigs
+namespace ${exportNamespace}
 {
 	public partial class ${RowClass}
 	{
@@ -161,7 +168,11 @@ export class ExportUJsonPlugin extends PluginBase {
 
 	handleBatch(paras: HandleBatchParams): void {
 
-		let moreOptions = paras.moreOptions
+		let {
+			moreOptions,
+			tables,
+			exportNamespace,
+		} = paras
 		let isSkipIndexLoader = !!moreOptions.SkipIndexLoader ?? false
 		if (isSkipIndexLoader0) {
 			isSkipIndexLoader = true
@@ -170,13 +181,12 @@ export class ExportUJsonPlugin extends PluginBase {
 			return;
 		}
 
-		var tables = paras.tables;
 		var temp = `
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MEEC.ExportedConfigs
+namespace ${exportNamespace}
 {
 	public static class DefaultConfigLoader{
 		public static IEnumerable<Func<Task>> Load(){

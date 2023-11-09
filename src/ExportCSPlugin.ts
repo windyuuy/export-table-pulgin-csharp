@@ -14,6 +14,7 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 		packagename,
 		tables,
 		xxtea,
+		exportNamespace,
 		moreOptions,
 	} = paras;
 
@@ -157,7 +158,7 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MEEC.ExportedConfigs{
+namespace ${exportNamespace}{
 [System.Serializable]
 public partial class ${RowClass} {
 
@@ -321,7 +322,7 @@ ${iff(f.type == "fk[]", () => `
 				if(null==this.${convMemberName(f.name)}){
 					this._fk${convMemberName(f.name)} = new ${convMemberName(f.fkTableName!)}[0];
 				}else{
-					this._fk${convMemberName(f.name)}=MEEC.ExportedConfigs.${convMemberName(f.fkTableName!)}.Configs.FindAll(a=>a.${convMemberName(f.fkFieldName!)}!=null && this.${convMemberName(f.name)}!.Contains(a.${convMemberName(f.fkFieldName!)})).ToArray();
+					this._fk${convMemberName(f.name)}=${exportNamespace}.${convMemberName(f.fkTableName!)}.Configs.FindAll(a=>a.${convMemberName(f.fkFieldName!)}!=null && this.${convMemberName(f.name)}!.Contains(a.${convMemberName(f.fkFieldName!)})).ToArray();
 				}
 			}
 			return this._fk${convMemberName(f.name)};

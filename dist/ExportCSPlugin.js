@@ -29,7 +29,7 @@ const fs = __importStar(require("fs-extra"));
 var isSkipExportDefaults0 = process.argv.findIndex(v => v == "--SkipDefaults") >= 0;
 function export_stuff(paras) {
     var _a;
-    let { datas, fields, inject, name, objects, packagename, tables, xxtea, moreOptions, } = paras;
+    let { datas, fields, inject, name, objects, packagename, tables, xxtea, exportNamespace, moreOptions, } = paras;
     let isSkipExportDefaults = (_a = !!moreOptions.SkipDefaults) !== null && _a !== void 0 ? _a : false;
     if (isSkipExportDefaults0) {
         isSkipExportDefaults = true;
@@ -194,7 +194,7 @@ function export_stuff(paras) {
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MEEC.ExportedConfigs{
+namespace ${exportNamespace}{
 [System.Serializable]
 public partial class ${RowClass} {
 
@@ -350,7 +350,7 @@ ${(0, export_table_lib_1.iff)(f.type == "fk[]", () => `
 				if(null==this.${convMemberName(f.name)}){
 					this._fk${convMemberName(f.name)} = new ${convMemberName(f.fkTableName)}[0];
 				}else{
-					this._fk${convMemberName(f.name)}=MEEC.ExportedConfigs.${convMemberName(f.fkTableName)}.Configs.FindAll(a=>a.${convMemberName(f.fkFieldName)}!=null && this.${convMemberName(f.name)}!.Contains(a.${convMemberName(f.fkFieldName)})).ToArray();
+					this._fk${convMemberName(f.name)}=${exportNamespace}.${convMemberName(f.fkTableName)}.Configs.FindAll(a=>a.${convMemberName(f.fkFieldName)}!=null && this.${convMemberName(f.name)}!.Contains(a.${convMemberName(f.fkFieldName)})).ToArray();
 				}
 			}
 			return this._fk${convMemberName(f.name)};
