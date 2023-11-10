@@ -1,6 +1,6 @@
 {
   "name": "export-table-pulgin-csharp",
-  "version": "1.1.88",
+  "version": "1.1.90",
   "description": "",
   "main": "./dist/index.js",
   "scripts": {
@@ -13,7 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^17.0.18",
-    "export-table-lib": "^1.0.56",
+    "export-table-lib": "^1.0.59",
     "fs": "^0.0.1-security",
     "fs-extra": "^10.0.0",
     "fse": "^4.0.1"

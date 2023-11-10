@@ -6,7 +6,11 @@ export function TryConvValue(value: any, t: FieldType, f: Field): any {
 	try {
 		return ConvValue(value, t, f)
 	} catch (ex) {
-		return null
+		if (ex instanceof TypeError) {
+			throw ex
+		} else {
+			return null
+		}
 	}
 }
 
@@ -15,9 +19,11 @@ export function ConvValue(value: any, t: FieldType, f: Field): any {
 		return JSON.parse(value)
 	} else if (t == "object[]") {
 		return JSON.parse(value)
-	} else if (t == "number" || t == "int" || t == "long") {
+	} else if (t == "number" || t == "float") {
 		return JSON.parse(value)
-	} else if (t == "number[]") {
+	} else if (t == "int" || t == "long") {
+		return parseInt(value)
+	} else if (t == "number[]" || t == "float[]") {
 		return JSON.parse(value)
 	} else if (t == "int[]") {
 		return JSON.parse(value)
@@ -44,12 +50,12 @@ export function ConvValue(value: any, t: FieldType, f: Field): any {
 		return value
 	} else if (t == "any") {
 		console.log(f)
-		throw new Error(`invalid type ${f.name}:<${f.rawType} => any>`)
+		throw new TypeError(`invalid type ${f.name}:<${f.rawType} => any>`)
 	} else if (t == "key") {
 		return JSON.parse(t)
 	}
 
-	throw new Error(`invalid type ${f.name}:<${f.rawType} => unkown>`)
+	throw new TypeError(`invalid unkown type ${f.name}:<${f.rawType} => ${t}>`)
 }
 
 export function ConvValue2Literal(value: any, t: FieldType, f: Field): string {
@@ -75,6 +81,9 @@ export function ConvValue2Literal(value: any, t: FieldType, f: Field): string {
 	} else if (t == "number[]") {
 		let values = value as number[]
 		return `new double[]{${values.join(", ")}}`
+	} else if (t == "float[]") {
+		let values = value as number[]
+		return `new float[]{${values.join(", ")}}`
 	} else if (t == "int[]") {
 		let values = value as number[]
 		return `new int[]{${values.join(", ")}}`
@@ -158,6 +167,10 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 			return "double";
 		} else if (t == "number[]") {
 			return "double[]";
+		} else if (t == "float") {
+			return "float";
+		} else if (t == "float[]") {
+			return "float[]";
 		} else if (t == "int") {
 			return "int";
 		} else if (t == "int[]") {
@@ -305,7 +318,7 @@ ${foreach(fields, f => {
 			return ${tempDictByMemberName}.GetValueOrDefault(${memberName});
 		}
 `
-		} else if (f.type == "number" || f.type == "int" || f.type == "long" || f.type == "string") {
+		} else if (f.type == "number" || f.type == "float" || f.type == "int" || f.type == "long" || f.type == "string") {
 			let memberName = convMemberName(f.name);
 			let tempRecordsDictByMemberName = `tempRecordsDictBy${memberName}`;
 			let memberType = getFieldType(f);

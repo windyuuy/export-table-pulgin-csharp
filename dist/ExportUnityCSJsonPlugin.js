@@ -55,6 +55,7 @@ function exportUJson(paras) {
                     index2 = content.indexOf("|", index);
                     let numStr = content.substring(index, index2);
                     let t1 = m[1];
+                    let v1 = (0, ExportCSPlugin_1.TryConvValue)(numStr, t1, f);
                     index = content.indexOf(";;", index2);
                     let posEnd = index;
                     if (index == -1) {
@@ -65,10 +66,12 @@ function exportUJson(paras) {
                     }
                     let ssStr = content.substring(index2 + 1, posEnd);
                     let t2 = m[2];
-                    console.log(`parseinfo: ${index2}, ${index}, ${numStr}, ${ssStr}, ${t1}, ${t2}`);
+                    let v2 = (0, ExportCSPlugin_1.TryConvValue)(ssStr, t2, f);
+                    console.log(`parseinfo1: ${content}, ${index2}, ${index}, ${numStr}, ${t1}, ${v1}`);
+                    console.log(`parseinfo2: ${content}, ${index2}, ${index}, ${ssStr}, ${t2}, ${v2}`);
                     objs.push({
-                        Item1: (0, ExportCSPlugin_1.TryConvValue)(numStr, t1, f),
-                        Item2: (0, ExportCSPlugin_1.TryConvValue)(ssStr, t2, f),
+                        Item1: v1,
+                        Item2: v2,
                     });
                 }
                 let isArray = m[3] == "[]";

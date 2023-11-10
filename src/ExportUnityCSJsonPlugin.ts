@@ -41,6 +41,7 @@ export function exportUJson(paras: HandleSheetParams): string | null {
 					index2 = content.indexOf("|", index)
 					let numStr = content.substring(index, index2)
 					let t1 = m[1]
+					let v1 = TryConvValue(numStr, t1 as any, f);
 					index = content.indexOf(";;", index2)
 					let posEnd = index
 					if (index == -1) {
@@ -50,10 +51,12 @@ export function exportUJson(paras: HandleSheetParams): string | null {
 					}
 					let ssStr = content.substring(index2 + 1, posEnd)
 					let t2 = m[2]
-					console.log(`parseinfo: ${index2}, ${index}, ${numStr}, ${ssStr}, ${t1}, ${t2}`)
+					let v2 = TryConvValue(ssStr, t2 as any, f);
+					console.log(`parseinfo1: ${content}, ${index2}, ${index}, ${numStr}, ${t1}, ${v1}`)
+					console.log(`parseinfo2: ${content}, ${index2}, ${index}, ${ssStr}, ${t2}, ${v2}`)
 					objs.push({
-						Item1: TryConvValue(numStr, t1 as any, f),
-						Item2: TryConvValue(ssStr, t2 as any, f),
+						Item1: v1,
+						Item2: v2,
 					})
 				}
 
