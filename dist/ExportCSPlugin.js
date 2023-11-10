@@ -32,7 +32,8 @@ function TryConvValue(value, t, f) {
     }
     catch (ex) {
         if (ex instanceof TypeError) {
-            throw ex;
+            console.error(ex);
+            return null;
         }
         else {
             return null;

@@ -67,7 +67,7 @@ export function exportUJson(paras: HandleSheetParams): string | null {
 					if (objs.length > 1) {
 						console.log(`配置错误，过多的条目数量: ${content}`)
 					}
-					newObj[newKey + "Obj"] = objs[0] ?? null
+					newObj[newKey + "Obj"] = objs[0] ?? {}
 				}
 			}
 		}

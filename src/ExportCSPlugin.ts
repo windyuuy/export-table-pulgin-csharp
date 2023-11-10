@@ -7,7 +7,8 @@ export function TryConvValue(value: any, t: FieldType, f: Field): any {
 		return ConvValue(value, t, f)
 	} catch (ex) {
 		if (ex instanceof TypeError) {
-			throw ex
+			console.error(ex)
+			return null
 		} else {
 			return null
 		}
