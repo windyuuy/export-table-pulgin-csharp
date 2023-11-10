@@ -30,7 +30,7 @@ export function exportUJson(paras: HandleSheetParams): string | null {
 			var newKey = convMemberName(key);
 			newObj[newKey] = obj[key];
 
-			let m = f.rawType.match(/\@\((\w+),(\w+)\)\[\]/)
+			let m = f.rawType.match(/\@\((\w+),(\w+)\)(\[\])?/)
 			if (m != null) {
 				// [{"Item1":99,"Item2":"klwjefl"}]
 				let content = obj[key] as string;
@@ -56,7 +56,16 @@ export function exportUJson(paras: HandleSheetParams): string | null {
 						Item2: TryConvValue(ssStr, t2 as any, f),
 					})
 				}
-				newObj[newKey + "Obj"] = objs
+
+				let isArray = m[3] == "[]"
+				if (isArray) {
+					newObj[newKey + "Obj"] = objs
+				} else {
+					if (objs.length > 1) {
+						console.log(`配置错误，过多的条目数量: ${content}`)
+					}
+					newObj[newKey + "Obj"] = objs[0] ?? null
+				}
 			}
 		}
 		// Object.keys(obj).forEach(key => {
