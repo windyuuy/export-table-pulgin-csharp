@@ -262,7 +262,7 @@ ${foreach(getDescripts(f), line =>
 	`	/// ${line}`
 )}
 	/// </summary>
-	public ${f.rawType.replaceAll(/(?<=[^\w])(number)(?=[^\w]|$)/g, "double").replaceAll(/(?<=[^\w])(boolean)(?=[^\w]|$)/g, "bool")} ${convMemberName(f.name)}Obj;`)}`
+	public ${f.rawType.substring(1).replaceAll(/(?<=[^\w])(number)(?=[^\w]|$)/g, "double").replaceAll(/(?<=[^\w])(boolean)(?=[^\w]|$)/g, "bool")} ${convMemberName(f.name)}Obj;`)}`
 )}
 
 	${cmm(/**生成get字段 */)}

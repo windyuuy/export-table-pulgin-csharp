@@ -302,7 +302,7 @@ ${(0, export_table_lib_1.iff)(f.rawType.startsWith("@"), () => `
 	/// <summary>
 ${(0, export_table_lib_1.foreach)(getDescripts(f), line => `	/// ${line}`)}
 	/// </summary>
-	public ${f.rawType.replaceAll(/(?<=[^\w])(number)(?=[^\w]|$)/g, "double").replaceAll(/(?<=[^\w])(boolean)(?=[^\w]|$)/g, "bool")} ${convMemberName(f.name)}Obj;`)}`)}
+	public ${f.rawType.substring(1).replaceAll(/(?<=[^\w])(number)(?=[^\w]|$)/g, "double").replaceAll(/(?<=[^\w])(boolean)(?=[^\w]|$)/g, "bool")} ${convMemberName(f.name)}Obj;`)}`)}
 
 	${(0, export_table_lib_1.cmm)( /**生成get字段 */)}
 #region get字段
