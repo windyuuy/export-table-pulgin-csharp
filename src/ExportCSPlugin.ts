@@ -1,6 +1,113 @@
 
-import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, iff } from "export-table-lib"
+import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, iff, FieldType } from "export-table-lib"
 import * as fs from "fs-extra"
+
+export function TryConvValue(value: any, t: FieldType, f: Field): any {
+	try {
+		return ConvValue(value, t, f)
+	} catch (ex) {
+		return null
+	}
+}
+
+export function ConvValue(value: any, t: FieldType, f: Field): any {
+	if (t == "object") {
+		return JSON.parse(value)
+	} else if (t == "object[]") {
+		return JSON.parse(value)
+	} else if (t == "number" || t == "int" || t == "long") {
+		return JSON.parse(value)
+	} else if (t == "number[]") {
+		return JSON.parse(value)
+	} else if (t == "int[]") {
+		return JSON.parse(value)
+	} else if (t == "long[]") {
+		return JSON.parse(value)
+	} else if (t == "uid") {
+		return JSON.parse(value)
+	} else if (t == "bool") {
+		try {
+			return !!JSON.parse(value)
+		} catch (ex) {
+			console.log(ex)
+			return false
+		}
+	} else if (t == "bool[]") {
+		return JSON.parse(value)
+	} else if (t == "string") {
+		return value
+	} else if (t == "string[]") {
+		return JSON.parse(value)
+	} else if (t == "fk") {
+		return value
+	} else if (t == "fk[]") {
+		return value
+	} else if (t == "any") {
+		console.log(f)
+		throw new Error(`invalid type ${f.name}:<${f.rawType} => any>`)
+	} else if (t == "key") {
+		return JSON.parse(t)
+	}
+
+	throw new Error(`invalid type ${f.name}:<${f.rawType} => unkown>`)
+}
+
+export function ConvValue2Literal(value: any, t: FieldType, f: Field): string {
+	if (t == "object") {
+		//throw new Error("invalid type <object>")
+		let convert: string[] = [];
+		for (let k in value) {
+			convert.push(`{"${k}","${(value as any)[k].toString()}"}`);
+		};
+		return `new Dictionary<string,string>(${convert.length}){${convert}}`;
+	} else if (t == "object[]") {
+		let values = value as object[];
+		//throw new Error("invalid type <object[]>")
+		return `new List<Dictionary<string,string>>(){${values.map((val) => {
+			let convert: string[] = [];
+			for (let k in val) {
+				convert.push(`{"${k}","${(val as any)[k].toString()}"}`);
+			};
+			return `new Dictionary<string,string>(${convert.length}){${convert}}`;
+		})}}`
+	} else if (t == "number" || t == "int" || t == "long") {
+		return `${value}`
+	} else if (t == "number[]") {
+		let values = value as number[]
+		return `new double[]{${values.join(", ")}}`
+	} else if (t == "int[]") {
+		let values = value as number[]
+		return `new int[]{${values.join(", ")}}`
+	} else if (t == "long[]") {
+		let values = value as number[]
+		return `new long[]{${values.join(", ")}}`
+	} else if (t == "uid") {
+		return `${value}`
+	} else if (t == "bool") {
+		return `${value}`
+	} else if (t == "bool[]") {
+		let values = value as boolean[]
+		return `new bool[]{${values.join(", ")}}`
+	} else if (t == "string") {
+		// return `"${value}"`
+		return JSON.stringify(value)
+	} else if (t == "string[]") {
+		let values = value as string[]
+		return `new string[]{${values.map(v => JSON.stringify(v)).join(", ")}}`
+	} else if (t == "fk") {
+		return `${value}`
+	} else if (t == "fk[]") {
+		let values = value as number[]
+		return `new int[]{${values.join(", ")}}`
+	} else if (t == "any") {
+		console.log(f)
+		throw new Error(`invalid type ${f.name}:<${f.rawType} => any>`)
+	} else if (t == "key") {
+		return `${value}`
+	}
+
+	throw new Error(`invalid type ${f.name}:<${f.rawType} => unkown>`)
+}
 
 var isSkipExportDefaults0 = process.argv.findIndex(v => v == "--SkipDefaults") >= 0
 
@@ -18,7 +125,7 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 		moreOptions,
 	} = paras;
 
-	let isSkipExportDefaults = !!moreOptions.SkipDefaults ?? false
+	let isSkipExportDefaults = !!moreOptions?.SkipDefaults ?? false
 	if (isSkipExportDefaults0) {
 		isSkipExportDefaults = true
 	}
@@ -89,61 +196,7 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 	}
 
 	const genValue = (value: any, f: Field): string => {
-		let t = f.type
-		if (t == "object") {
-			//throw new Error("invalid type <object>")
-			let convert: string[] = [];
-			for (let k in value) {
-				convert.push(`{"${k}","${(value as any)[k].toString()}"}`);
-			};
-			return `new Dictionary<string,string>(${convert.length}){${convert}}`;
-		} else if (t == "object[]") {
-			let values = value as object[];
-			//throw new Error("invalid type <object[]>")
-			return `new List<Dictionary<string,string>>(){${values.map((val) => {
-				let convert: string[] = [];
-				for (let k in val) {
-					convert.push(`{"${k}","${(val as any)[k].toString()}"}`);
-				};
-				return `new Dictionary<string,string>(${convert.length}){${convert}}`;
-			})}}`
-		} else if (t == "number" || t == "int" || t == "long") {
-			return `${value}`
-		} else if (t == "number[]") {
-			let values = value as number[]
-			return `new double[]{${values.join(", ")}}`
-		} else if (t == "int[]") {
-			let values = value as number[]
-			return `new int[]{${values.join(", ")}}`
-		} else if (t == "long[]") {
-			let values = value as number[]
-			return `new long[]{${values.join(", ")}}`
-		} else if (t == "uid") {
-			return `${value}`
-		} else if (t == "bool") {
-			return `${value}`
-		} else if (t == "bool[]") {
-			let values = value as boolean[]
-			return `new bool[]{${values.join(", ")}}`
-		} else if (t == "string") {
-			// return `"${value}"`
-			return JSON.stringify(value)
-		} else if (t == "string[]") {
-			let values = value as string[]
-			return `new string[]{${values.map(v => JSON.stringify(v)).join(", ")}}`
-		} else if (t == "fk") {
-			return `${value}`
-		} else if (t == "fk[]") {
-			let values = value as number[]
-			return `new int[]{${values.join(", ")}}`
-		} else if (t == "any") {
-			console.log(f)
-			throw new Error(`invalid type ${f.name}:<${f.rawType} => any>`)
-		} else if (t == "key") {
-			return `${value}`
-		}
-
-		throw new Error(`invalid type ${f.name}:<${f.rawType} => unkown>`)
+		return ConvValue2Literal(value, f.type, f)
 	}
 
 	const getTitle = (v: Field) => {
@@ -201,8 +254,16 @@ ${foreach(getDescripts(f), line =>
 		`	/// ${line}`
 	)}
 	/// </summary>
-	public ${getFieldType(f)} ${convMemberName(f.name)};`
-	)}
+	public ${getFieldType(f)} ${convMemberName(f.name)};
+
+${iff(f.rawType.startsWith("@"), () => `
+	/// <summary>
+${foreach(getDescripts(f), line =>
+	`	/// ${line}`
+)}
+	/// </summary>
+	public ${f.rawType.replaceAll(/(?<=[^\w])(number)(?=[^\w]|$)/g, "double").replaceAll(/(?<=[^\w])(boolean)(?=[^\w]|$)/g, "bool")} ${convMemberName(f.name)}Obj;`)}`
+)}
 
 	${cmm(/**生成get字段 */)}
 #region get字段

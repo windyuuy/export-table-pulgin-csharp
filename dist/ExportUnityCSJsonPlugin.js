@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExportUJsonPlugin = exports.exportUJsonLoader = exports.exportUJson = void 0;
 const export_table_lib_1 = require("export-table-lib");
 const fs = __importStar(require("fs-extra"));
+const ExportCSPlugin_1 = require("./ExportCSPlugin");
 var isSkipIndexLoader0 = process.argv.findIndex(v => v == "--SkipIndexLoader") >= 0;
 let firstLetterUpper = export_table_lib_1.makeFirstLetterUpper;
 function exportUJson(paras) {
@@ -39,10 +40,44 @@ function exportUJson(paras) {
     var fullName = `${table.workbookName}-${name}`;
     let jsonString = JSON.stringify(objects.map(obj => {
         var newObj = Object.create(null);
-        Object.keys(obj).forEach(key => {
+        for (let f of fields) {
+            let key = f.name;
             var newKey = convMemberName(key);
             newObj[newKey] = obj[key];
-        });
+            let m = f.rawType.match(/\@\((\w+),(\w+)\)\[\]/);
+            if (m != null) {
+                // [{"Item1":99,"Item2":"klwjefl"}]
+                let content = obj[key];
+                let index = 0;
+                let index2 = -1;
+                let objs = [];
+                while (0 <= index && index < content.length) {
+                    index2 = content.indexOf("|", index);
+                    let numStr = content.substring(index, index2);
+                    let t1 = m[1];
+                    index = content.indexOf(";;", index2);
+                    let posEnd = index;
+                    if (index == -1) {
+                        posEnd = content.length;
+                    }
+                    else {
+                        index += 2;
+                    }
+                    let ssStr = content.substring(index2 + 1, posEnd);
+                    let t2 = m[2];
+                    console.log(`parseinfo: ${index2}, ${index}, ${numStr}, ${ssStr}, ${t1}, ${t2}`);
+                    objs.push({
+                        Item1: (0, ExportCSPlugin_1.TryConvValue)(numStr, t1, f),
+                        Item2: (0, ExportCSPlugin_1.TryConvValue)(ssStr, t2, f),
+                    });
+                }
+                newObj[newKey + "Obj"] = objs;
+            }
+        }
+        // Object.keys(obj).forEach(key => {
+        // 	var newKey = convMemberName(key);
+        // 	newObj[newKey] = obj[key];
+        // })
         return newObj;
     }));
     return jsonString;
@@ -146,11 +181,8 @@ namespace ${exportNamespace}
 }
 exports.exportUJsonLoader = exportUJsonLoader;
 class ExportUJsonPlugin extends export_table_lib_1.PluginBase {
-    constructor() {
-        super(...arguments);
-        this.name = "ujson";
-        this.tags = ["ujson"];
-    }
+    name = "ujson";
+    tags = ["ujson"];
     handleSheet(paras) {
         var fullName = `${paras.table.workbookName}-${paras.name}`;
         {
@@ -170,9 +202,8 @@ class ExportUJsonPlugin extends export_table_lib_1.PluginBase {
         }
     }
     handleBatch(paras) {
-        var _a;
         let { moreOptions, tables, exportNamespace, } = paras;
-        let isSkipIndexLoader = (_a = !!moreOptions.SkipIndexLoader) !== null && _a !== void 0 ? _a : false;
+        let isSkipIndexLoader = !!moreOptions?.SkipIndexLoader ?? false;
         if (isSkipIndexLoader0) {
             isSkipIndexLoader = true;
         }
