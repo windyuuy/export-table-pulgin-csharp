@@ -276,6 +276,21 @@ function export_stuff(paras) {
     const getDescripts = (v) => {
         return v.describe.split("\n");
     };
+    const convTupleArrayType = (f) => {
+        let line0 = f.rawType.replaceAll(/(?<=[^\w])(number)(?=[^\w]|$)/g, "double").replaceAll(/(?<=[^\w])(boolean)(?=[^\w]|$)/g, "bool");
+        console.log(line0);
+        let m = line0.match(/\@\((\w+),(\w+)\)(\[\])?/);
+        if (m != null) {
+            let type1 = m[1];
+            let type2 = m[2];
+            let isArray = m[3] != null;
+            let line = `public System.Tuple<${type1}, ${type2}>${isArray ? "[]" : ""} ${convMemberName(f.name)}Obj;`;
+            return line;
+        }
+        else {
+            return `public ${line0}  ${convMemberName(f.name)}Obj;`;
+        }
+    };
     let temp = `
 using System.Collections.Generic;
 using System.Linq;
@@ -321,7 +336,7 @@ ${(0, export_table_lib_1.iff)(f.rawType.startsWith("@"), () => `
 	/// <summary>
 ${(0, export_table_lib_1.foreach)(getDescripts(f), line => `	/// ${line}`)}
 	/// </summary>
-	public ${f.rawType.substring(1).replaceAll(/(?<=[^\w])(number)(?=[^\w]|$)/g, "double").replaceAll(/(?<=[^\w])(boolean)(?=[^\w]|$)/g, "bool")} ${convMemberName(f.name)}Obj;`)}`)}
+	${convTupleArrayType(f)}`)}`)}
 
 	${(0, export_table_lib_1.cmm)( /**生成get字段 */)}
 #region get字段
