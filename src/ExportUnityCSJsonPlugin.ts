@@ -148,7 +148,17 @@ namespace ${exportNamespace}
 #endif
 			if (configJson != null)
 			{
-				var jsonObjs = JSON.parse<${RowClass}[]>(configJson.text);
+				Debug.Log($"解析配表: {loadUrl}");
+				${RowClass}[] jsonObjs;
+				try
+				{
+					jsonObjs = JSON.parse<${RowClass}[]>(configJson.text);
+				}
+				catch(System.Exception ex)
+				{
+					Debug.LogError($"解析配表失败: {loadUrl}");
+                    throw ex;
+				}
 				var configs = ${RowClass}.Configs;
 				configs.Clear();
 				configs.AddRange(jsonObjs);
