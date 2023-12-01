@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ExportPlugin = exports.export_stuff = void 0;
+exports.ExportLiteDBCSPlugin = exports.export_stuff = void 0;
 const export_table_lib_1 = require("export-table-lib");
 const CSParseTool_1 = require("./CSParseTool");
 const fs = __importStar(require("fs-extra"));
@@ -45,12 +45,20 @@ namespace ${exportNamespace}{
 [System.Serializable]
 public partial class ${RowClass} {
 
-	public static List<${RowClass}> Configs = new List<${RowClass}>()
+	private static List<${RowClass}> _configs;
+
+	public static List<${RowClass}> Configs
 	{
-${(0, export_table_lib_1.iff)(!isSkipExportDefaults, () => `
-${(0, export_table_lib_1.foreach)(datas, data => `		new ${RowClass}(${(0, export_table_lib_1.st)(() => fields.map((f, index) => (0, CSParseTool_1.genValue)(data[index], f)).join(", "))}),`)}
-`)}
-	};
+		get
+		{
+			if (_configs == null)
+			{
+				_configs = Collection.FindAll().ToList();
+			}
+
+			return _configs;
+		}
+	}
 
 	public ${RowClass}() { }
 	public ${RowClass}(${(0, export_table_lib_1.st)(() => fields.map(f => `${(0, CSParseTool_1.getFieldType)(f)} ${(0, CSParseTool_1.convVarName)(f.name)}`).join(", "))})
@@ -110,19 +118,16 @@ ${(0, export_table_lib_1.foreach)(fields, f => {
 			if (${tempDictByMemberName} == null)
 			{
 				${tempDictByMemberName} = new Dictionary<${memberType}, ${RowClass}>(Configs.Count);
-				for(var i = 0; i < Configs.Count; i++)
-				{
-					var c = Configs[i];
-					${tempDictByMemberName}.Add(c.${memberName}, c);
-				}
 			}
-#if UNITY_EDITOR
-			if (${tempDictByMemberName}.Count != Configs.Count)
+
+			if (${tempDictByMemberName}.TryGetValue(${paraName}, out var result))
 			{
-				UnityEngine.Debug.LogError($"配表数据不一致(ConfigsUnmatched): {${tempDictByMemberName}.Count}!={Configs.Count}");
+				return result;
 			}
-#endif
-			return ${tempDictByMemberName}.GetValueOrDefault(${paraName});
+
+			result = Collection.FindOne(record => record.${memberName} == ${paraName});
+			${tempDictByMemberName}.Add(${paraName}, result);
+			return result;
 		}
 `;
         }
@@ -145,7 +150,7 @@ ${(0, export_table_lib_1.foreach)(fields, f => {
 				{
 					${tempRecordsDictByMemberName} = new Dictionary<${memberType}, ${RowClass}[]>(Configs.Count);
 				}
-				var records = Configs.Where(c => c.${memberName} == ${paraName}).ToArray();
+				var records = Collection.Find(c => c.${memberName} == ${paraName}).ToArray();
 				${tempRecordsDictByMemberName}.Add(${paraName}, records);
 				return records;
 			}
@@ -220,15 +225,17 @@ ${(0, export_table_lib_1.iff)(f.type == "fk[]", () => `
     return temp;
 }
 exports.export_stuff = export_stuff;
-class ExportPlugin extends export_table_lib_1.PluginBase {
-    name = "csharp";
-    tags = ["cs"];
+class ExportLiteDBCSPlugin extends export_table_lib_1.PluginBase {
+    name = "litedbcs";
+    tags = ["litedbcs"];
     handleSheet(paras) {
         let content = export_stuff(paras);
         if (content != null) {
-            fs.outputFileSync(paras.outFilePath.fullPath, content, "utf-8");
+            var fullName = `${paras.table.workbookName}-${paras.name}`;
+            let savePath = new export_table_lib_1.OutFilePath(paras.outPath, fullName, ".cs").fullPath;
+            fs.outputFileSync(savePath, content, "utf-8");
         }
         return content;
     }
 }
-exports.ExportPlugin = ExportPlugin;
+exports.ExportLiteDBCSPlugin = ExportLiteDBCSPlugin;

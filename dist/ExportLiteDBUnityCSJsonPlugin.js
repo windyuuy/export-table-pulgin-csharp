@@ -22,11 +22,17 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ExportUJsonPlugin = exports.exportUJsonLoader = exports.exportUJson = void 0;
+exports.ExportLiteDBUJsonPlugin = exports.exportUJsonLoader = exports.exportUJson = void 0;
 const export_table_lib_1 = require("export-table-lib");
 const fs = __importStar(require("fs-extra"));
 const CSParseTool_1 = require("./CSParseTool");
+const path_1 = __importDefault(require("path"));
+const cp = __importStar(require("child_process"));
+const commander_1 = __importDefault(require("commander"));
 var isSkipIndexLoader0 = process.argv.findIndex(v => v == "--SkipIndexLoader") >= 0;
 let firstLetterUpper = export_table_lib_1.makeFirstLetterUpper;
 function exportUJson(paras) {
@@ -38,7 +44,8 @@ function exportUJson(paras) {
             let key = f.name;
             var newKey = (0, CSParseTool_1.convMemberName)(key);
             newObj[newKey] = obj[key];
-            let m = f.rawType.match(/\@\((\w+),(\w+)\)(\[\])?/);
+            var line = f.rawType.replaceAll(/(?<=[^\w])(boolean)(?=[^\w]|$)/g, "bool");
+            let m = line.match(/\@\((\w+),(\w+)\)(\[\])?/);
             if (m != null) {
                 // [{"Item1":99,"Item2":"klwjefl"}]
                 let content = obj[key];
@@ -120,6 +127,7 @@ function exportUJsonLoader(paras) {
     let temp = `
 using UnityEngine.AddressableAssets;
 using System.Threading.Tasks;
+using LiteDB;
 using UnityEngine;
 using ${jsonToolNamespace};
 
@@ -127,78 +135,34 @@ namespace ${exportNamespace}
 {
 	public partial class ${RowClass}
 	{
+		protected static LiteDatabase Database;
+		protected static ILiteCollection<${RowClass}> Collection;
+		public static Task Load()
+		{
 #if UNITY_EDITOR && ENABLE_CONFIG_LOG
-		static ${RowClass}()
-		{
 			Debug.Log("ReferConfig-${RowClass}");
-		}
 #endif
-		public static async Task Load()
-		{
-			var loadUrl="Assets/Bundles/GameConfigs/Auto/${fullName}.json";
-			var configJson =
-#if UNITY_EDITOR
-				Application.isPlaying ? await Addressables.LoadAssetAsync<TextAsset>(loadUrl).Task
-					: UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>(loadUrl);
-#else
-				await Addressables.LoadAssetAsync<TextAsset>(loadUrl).Task;
-#endif
-			if (configJson != null)
+			
+			var ldb = SharedLiteDB.Database;
+			Database = ldb;
+			const string key = "${fullName.replace("-", "_")}";
+			if (!ldb.CollectionExists(key))
 			{
-				Debug.Log($"解析配表: {loadUrl}");
-				${RowClass}[] jsonObjs;
-				try
-				{
-					jsonObjs = JSON.parse<${RowClass}[]>(configJson.text);
-				}
-				catch(System.Exception ex)
-				{
-					Debug.LogError($"解析配表失败: {loadUrl}");
-                    throw ex;
-				}
-				var configs = ${RowClass}.Configs;
-				configs.Clear();
-				configs.AddRange(jsonObjs);
+				Debug.LogError($"配表资源缺失: {key}");
 			}
-			else
-			{
-				Debug.LogError($"配表资源缺失: {loadUrl}");
-			}
-		}
+			Collection = ldb.GetCollection<${RowClass}>(key);
 
-#if UNITY_EDITOR
-		public static void LoadInEditor(bool force = false)
-		{
-			if (Application.isPlaying && (!force))
-			{
-				var tip = $"cannot load ${RowClass}[] with LoadInEditor at runtime";
-				Debug.LogError(tip);
-				throw new System.Exception(tip);
-			}
-			var loadUrl="Assets/Bundles/GameConfigs/Auto/${fullName}.json";
-			var configJson = UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>(loadUrl);
-			if (configJson != null)
-			{
-				var jsonObjs = JSON.parse<${RowClass}[]>(configJson.text);
-				var configs = ${RowClass}.Configs;
-				configs.Clear();
-				configs.AddRange(jsonObjs);
-			}
-			else
-			{
-				Debug.LogError($"配表资源缺失: {loadUrl}");
-			}
+			return Task.CompletedTask;
 		}
-#endif
 	}
 }
 `;
     return temp;
 }
 exports.exportUJsonLoader = exportUJsonLoader;
-class ExportUJsonPlugin extends export_table_lib_1.PluginBase {
-    name = "ujson";
-    tags = ["ujson"];
+class ExportLiteDBUJsonPlugin extends export_table_lib_1.PluginBase {
+    name = "litedbujson";
+    tags = ["litedbujson"];
     handleSheet(paras) {
         var fullName = `${paras.table.workbookName}-${paras.name}`;
         {
@@ -213,6 +177,53 @@ class ExportUJsonPlugin extends export_table_lib_1.PluginBase {
             if (content2 != null) {
                 let savePath = new export_table_lib_1.OutFilePath(paras.outPath, fullName, ".json").fullPath;
                 fs.outputFileSync(savePath, content2, "utf-8");
+                console.log(`try conv json2litedb`);
+                var argvparse = require('argv-parse');
+                var args = argvparse({
+                    foo: {
+                        type: 'boolean',
+                        alias: 'f'
+                    },
+                    bar: {
+                        type: 'string',
+                        alias: 'b'
+                    },
+                    qux: {
+                        type: 'array',
+                        alias: 'q'
+                    },
+                    norf: {
+                        type: 'boolean',
+                        alias: 'n'
+                    }
+                });
+                var options = new commander_1.default.Command().option("--litedbpath <string>").parse(process.argv).opts();
+                let litedbpath = options["litedbpath"];
+                console.log(`litedbpath: ${litedbpath}`);
+                if (litedbpath != null) {
+                    let modulePath = require.resolve(".");
+                    let binPath = path_1.default.resolve(modulePath, "../../bin/Json2LiteDB.exe");
+                    // let dbPath = path.resolve("../../../GameClient/Assets/Bundles/GameConfigs/Auto/MainConfig.db.bytes");
+                    let dbPath = path_1.default.resolve(litedbpath);
+                    var savePath2 = path_1.default.resolve(savePath);
+                    let cmdline = `${binPath} ${savePath2} ${dbPath}`;
+                    console.log("execute-cmdline: " + cmdline);
+                    var output = cp.spawnSync(binPath, [savePath2, dbPath]);
+                    console.log(output.output.toString());
+                    console.log(`delete file: ${savePath2}`);
+                    try {
+                        if (fs.existsSync(savePath2)) {
+                            fs.removeSync(savePath2);
+                        }
+                    }
+                    catch (ex) {
+                        console.error(`error: cannot delete file ${savePath2}`);
+                        console.error(ex);
+                    }
+                }
+                else {
+                    console.log(`no litedbpath given, skip conv database`);
+                }
             }
             return content2;
         }
@@ -247,4 +258,4 @@ ${(0, export_table_lib_1.foreach)(tables.sort((ta, tb) => ta.name.localeCompare(
         fs.outputFileSync(savePath, temp, "utf-8");
     }
 }
-exports.ExportUJsonPlugin = ExportUJsonPlugin;
+exports.ExportLiteDBUJsonPlugin = ExportLiteDBUJsonPlugin;
