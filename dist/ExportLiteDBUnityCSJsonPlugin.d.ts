@@ -7,6 +7,6 @@ export declare class ExportLiteDBUJsonPlugin extends PluginBase {
     name: string;
     tags: string[];
     handleSheet(paras: HandleSheetParams): string | null;
-    handleBatch(paras: HandleBatchParams): void;
+    handleBatch(paras: HandleBatchParams): Promise<void>;
 }
 //# sourceMappingURL=ExportLiteDBUnityCSJsonPlugin.d.ts.map

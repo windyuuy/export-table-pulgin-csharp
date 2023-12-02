@@ -214,7 +214,7 @@ export class ExportLiteDBUJsonPlugin extends PluginBase {
 		}
 	}
 
-	async handleBatch(paras: HandleBatchParams): void {
+	async handleBatch(paras: HandleBatchParams) {
 
 		let {
 			moreOptions,
