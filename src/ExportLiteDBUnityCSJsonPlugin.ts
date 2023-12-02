@@ -5,7 +5,6 @@ import { TryConvValue, convMemberName } from "./CSParseTool";
 import path from "path";
 import * as cp from "child_process"
 import program from "commander"
-import yargs from "yargs";
 
 var isSkipIndexLoader0 = process.argv.findIndex(v => v == "--SkipIndexLoader") >= 0
 
@@ -155,6 +154,42 @@ namespace ${exportNamespace}
 
 }
 
+export async function RemoveJsonFiles(savePaths2: string[]) {
+	let deleteTasks = savePaths2.map(async (savePath2) => {
+		console.log(`delete file: ${savePath2}`)
+		try {
+			if (fs.existsSync(savePath2)) {
+				fs.removeSync(savePath2);
+			}
+		} catch (ex) {
+			console.error(`error: cannot delete file ${savePath2}`);
+			console.error(ex);
+		}
+	})
+
+	await Promise.all(deleteTasks)
+}
+export async function ConvJson2LiteDB(litedbpath: string, savePaths: string[]) {
+	if (litedbpath != null) {
+		let modulePath = require.resolve(".")
+		let binPath = path.resolve(modulePath, "../../bin/Json2LiteDB.exe")
+		// let dbPath = path.resolve("../../../GameClient/Assets/Bundles/GameConfigs/Auto/MainConfig.db.bytes");
+		let dbPath = path.resolve(litedbpath)
+		let savePaths2 = savePaths.map(savePath => path.resolve(savePath))
+		let cmdParas = savePaths2.concat();
+		cmdParas.unshift(litedbpath);
+		let cmdParasLine = cmdParas.join(" ");
+		let cmdline = `${binPath} ${cmdParasLine}`;
+		console.log("execute-cmdline: " + cmdline)
+		var output = cp.spawnSync(binPath, cmdParas)
+		console.log(output.output.toString())
+
+		RemoveJsonFiles(savePaths2)
+	} else {
+		console.log(`no litedbpath given, skip conv database`)
+	}
+}
+
 export class ExportLiteDBUJsonPlugin extends PluginBase {
 	name = "litedbujson"
 	tags: string[] = ["litedbujson"]
@@ -173,60 +208,13 @@ export class ExportLiteDBUJsonPlugin extends PluginBase {
 			if (content2 != null) {
 				let savePath = new OutFilePath(paras.outPath, fullName, ".json").fullPath
 				fs.outputFileSync(savePath, content2, "utf-8")
-
-				console.log(`try conv json2litedb`)
-				var argvparse = require('argv-parse')
-				var args = argvparse({
-					foo: {
-						type: 'boolean',
-						alias: 'f'
-					},
-					bar: {
-						type: 'string',
-						alias: 'b'
-					},
-					qux: {
-						type: 'array',
-						alias: 'q'
-					},
-					norf: {
-						type: 'boolean',
-						alias: 'n'
-					}
-				})
-
-				var options = new program.Command().option("--litedbpath <string>").parse(process.argv).opts()
-				let litedbpath = options["litedbpath"]
-				console.log(`litedbpath: ${litedbpath}`);
-				if (litedbpath != null) {
-					let modulePath = require.resolve(".")
-					let binPath = path.resolve(modulePath, "../../bin/Json2LiteDB.exe")
-					// let dbPath = path.resolve("../../../GameClient/Assets/Bundles/GameConfigs/Auto/MainConfig.db.bytes");
-					let dbPath = path.resolve(litedbpath)
-					var savePath2 = path.resolve(savePath);
-					let cmdline = `${binPath} ${savePath2} ${dbPath}`;
-					console.log("execute-cmdline: " + cmdline)
-					var output = cp.spawnSync(binPath, [savePath2, dbPath])
-					console.log(output.output.toString())
-					console.log(`delete file: ${savePath2}`)
-					try {
-						if (fs.existsSync(savePath2)) {
-							fs.removeSync(savePath2);
-						}
-					} catch (ex) {
-						console.error(`error: cannot delete file ${savePath2}`);
-						console.error(ex);
-					}
-				} else {
-					console.log(`no litedbpath given, skip conv database`)
-				}
 			}
 
 			return content2
 		}
 	}
 
-	handleBatch(paras: HandleBatchParams): void {
+	async handleBatch(paras: HandleBatchParams): void {
 
 		let {
 			moreOptions,
@@ -260,5 +248,18 @@ ${foreach(tables.sort((ta, tb) => ta.name.localeCompare(tb.name)), (table) => `
 `
 		let savePath = paras.outPath + "/DefaultConfigLoader.cs";
 		fs.outputFileSync(savePath, temp, "utf-8");
+
+		var options = new program.Command().option("--litedbpath <string>").parse(process.argv).opts()
+		let litedbpath = options["litedbpath"]
+		console.log(`litedbpath: ${litedbpath}`);
+
+		let cmdParas = tables.map(table => {
+			var fullName = `${table.workbookName}-${table.name}`
+			let savePath = new OutFilePath(paras.outPath, fullName, ".json").fullPath
+			return savePath
+		})
+
+		await ConvJson2LiteDB(litedbpath, cmdParas);
+
 	}
 }

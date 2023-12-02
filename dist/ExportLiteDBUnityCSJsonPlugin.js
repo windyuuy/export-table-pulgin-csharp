@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ExportLiteDBUJsonPlugin = exports.exportUJsonLoader = exports.exportUJson = void 0;
+exports.ExportLiteDBUJsonPlugin = exports.ConvJson2LiteDB = exports.RemoveJsonFiles = exports.exportUJsonLoader = exports.exportUJson = void 0;
 const export_table_lib_1 = require("export-table-lib");
 const fs = __importStar(require("fs-extra"));
 const CSParseTool_1 = require("./CSParseTool");
@@ -160,6 +160,43 @@ namespace ${exportNamespace}
     return temp;
 }
 exports.exportUJsonLoader = exportUJsonLoader;
+async function RemoveJsonFiles(savePaths2) {
+    let deleteTasks = savePaths2.map(async (savePath2) => {
+        console.log(`delete file: ${savePath2}`);
+        try {
+            if (fs.existsSync(savePath2)) {
+                fs.removeSync(savePath2);
+            }
+        }
+        catch (ex) {
+            console.error(`error: cannot delete file ${savePath2}`);
+            console.error(ex);
+        }
+    });
+    await Promise.all(deleteTasks);
+}
+exports.RemoveJsonFiles = RemoveJsonFiles;
+async function ConvJson2LiteDB(litedbpath, savePaths) {
+    if (litedbpath != null) {
+        let modulePath = require.resolve(".");
+        let binPath = path_1.default.resolve(modulePath, "../../bin/Json2LiteDB.exe");
+        // let dbPath = path.resolve("../../../GameClient/Assets/Bundles/GameConfigs/Auto/MainConfig.db.bytes");
+        let dbPath = path_1.default.resolve(litedbpath);
+        let savePaths2 = savePaths.map(savePath => path_1.default.resolve(savePath));
+        let cmdParas = savePaths2.concat();
+        cmdParas.unshift(litedbpath);
+        let cmdParasLine = cmdParas.join(" ");
+        let cmdline = `${binPath} ${cmdParasLine}`;
+        console.log("execute-cmdline: " + cmdline);
+        var output = cp.spawnSync(binPath, cmdParas);
+        console.log(output.output.toString());
+        RemoveJsonFiles(savePaths2);
+    }
+    else {
+        console.log(`no litedbpath given, skip conv database`);
+    }
+}
+exports.ConvJson2LiteDB = ConvJson2LiteDB;
 class ExportLiteDBUJsonPlugin extends export_table_lib_1.PluginBase {
     name = "litedbujson";
     tags = ["litedbujson"];
@@ -177,58 +214,11 @@ class ExportLiteDBUJsonPlugin extends export_table_lib_1.PluginBase {
             if (content2 != null) {
                 let savePath = new export_table_lib_1.OutFilePath(paras.outPath, fullName, ".json").fullPath;
                 fs.outputFileSync(savePath, content2, "utf-8");
-                console.log(`try conv json2litedb`);
-                var argvparse = require('argv-parse');
-                var args = argvparse({
-                    foo: {
-                        type: 'boolean',
-                        alias: 'f'
-                    },
-                    bar: {
-                        type: 'string',
-                        alias: 'b'
-                    },
-                    qux: {
-                        type: 'array',
-                        alias: 'q'
-                    },
-                    norf: {
-                        type: 'boolean',
-                        alias: 'n'
-                    }
-                });
-                var options = new commander_1.default.Command().option("--litedbpath <string>").parse(process.argv).opts();
-                let litedbpath = options["litedbpath"];
-                console.log(`litedbpath: ${litedbpath}`);
-                if (litedbpath != null) {
-                    let modulePath = require.resolve(".");
-                    let binPath = path_1.default.resolve(modulePath, "../../bin/Json2LiteDB.exe");
-                    // let dbPath = path.resolve("../../../GameClient/Assets/Bundles/GameConfigs/Auto/MainConfig.db.bytes");
-                    let dbPath = path_1.default.resolve(litedbpath);
-                    var savePath2 = path_1.default.resolve(savePath);
-                    let cmdline = `${binPath} ${savePath2} ${dbPath}`;
-                    console.log("execute-cmdline: " + cmdline);
-                    var output = cp.spawnSync(binPath, [savePath2, dbPath]);
-                    console.log(output.output.toString());
-                    console.log(`delete file: ${savePath2}`);
-                    try {
-                        if (fs.existsSync(savePath2)) {
-                            fs.removeSync(savePath2);
-                        }
-                    }
-                    catch (ex) {
-                        console.error(`error: cannot delete file ${savePath2}`);
-                        console.error(ex);
-                    }
-                }
-                else {
-                    console.log(`no litedbpath given, skip conv database`);
-                }
             }
             return content2;
         }
     }
-    handleBatch(paras) {
+    async handleBatch(paras) {
         let { moreOptions, tables, exportNamespace, } = paras;
         let isSkipIndexLoader = !!moreOptions?.SkipIndexLoader ?? false;
         if (isSkipIndexLoader0) {
@@ -256,6 +246,15 @@ ${(0, export_table_lib_1.foreach)(tables.sort((ta, tb) => ta.name.localeCompare(
 `;
         let savePath = paras.outPath + "/DefaultConfigLoader.cs";
         fs.outputFileSync(savePath, temp, "utf-8");
+        var options = new commander_1.default.Command().option("--litedbpath <string>").parse(process.argv).opts();
+        let litedbpath = options["litedbpath"];
+        console.log(`litedbpath: ${litedbpath}`);
+        let cmdParas = tables.map(table => {
+            var fullName = `${table.workbookName}-${table.name}`;
+            let savePath = new export_table_lib_1.OutFilePath(paras.outPath, fullName, ".json").fullPath;
+            return savePath;
+        });
+        await ConvJson2LiteDB(litedbpath, cmdParas);
     }
 }
 exports.ExportLiteDBUJsonPlugin = ExportLiteDBUJsonPlugin;

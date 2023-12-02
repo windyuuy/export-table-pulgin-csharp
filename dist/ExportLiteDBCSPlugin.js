@@ -41,62 +41,66 @@ function export_stuff(paras) {
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ${exportNamespace}{
-[System.Serializable]
-public partial class ${RowClass} {
-
-	private static List<${RowClass}> _configs;
-
-	public static List<${RowClass}> Configs
+namespace ${exportNamespace}
+{
+	[System.Serializable]
+	public partial class ${RowClass}
 	{
-		get
+
+		private static List<${RowClass}> _configs;
+
+		public static List<${RowClass}> Configs
 		{
-			if (_configs == null)
+			get
 			{
-				_configs = Collection.FindAll().ToList();
+				if (_configs == null)
+				{
+					_configs = Collection.FindAll().ToList();
+				}
+
+				return _configs;
 			}
-
-			return _configs;
 		}
-	}
 
-	public ${RowClass}() { }
-	public ${RowClass}(${(0, export_table_lib_1.st)(() => fields.map(f => `${(0, CSParseTool_1.getFieldType)(f)} ${(0, CSParseTool_1.convVarName)(f.name)}`).join(", "))})
-	{
-${(0, export_table_lib_1.foreach)(fields, f => `		this.${(0, CSParseTool_1.convMemberName)(f.name)} = ${(0, CSParseTool_1.convVarName)(f.name)};`)}
-	}
+		public ${RowClass}()
+		{
+		}
+		public ${RowClass}(${(0, export_table_lib_1.st)(() => fields.map(f => `${(0, CSParseTool_1.getFieldType)(f)} ${(0, CSParseTool_1.convVarName)(f.name)}`).join(", "))})
+		{
+${(0, export_table_lib_1.foreach)(fields, f => `			this.${(0, CSParseTool_1.convMemberName)(f.name)} = ${(0, CSParseTool_1.convVarName)(f.name)};`)}
+		}
 
-	public virtual ${RowClass} MergeFrom(${RowClass} source)
-	{
-${(0, export_table_lib_1.foreach)(fields, f => `		this.${(0, CSParseTool_1.convMemberName)(f.name)} = source.${(0, CSParseTool_1.convMemberName)(f.name)};`)}
-		return this;
-	}
+		public virtual ${RowClass} MergeFrom(${RowClass} source)
+		{
+${(0, export_table_lib_1.foreach)(fields, f => `			this.${(0, CSParseTool_1.convMemberName)(f.name)} = source.${(0, CSParseTool_1.convMemberName)(f.name)};`)}
+			return this;
+		}
 
-	public virtual ${RowClass} Clone()
-	{
-		var config = new ${RowClass}();
-		config.MergeFrom(this);
-		return config;
-	}
+		public virtual ${RowClass} Clone()
+		{
+			var config = new ${RowClass}();
+			config.MergeFrom(this);
+			return config;
+		}
 
 	${(0, export_table_lib_1.cmm)( /**生成字段 */)}
 ${(0, export_table_lib_1.foreach)(fields, f => `
-	/// <summary>
-${(0, export_table_lib_1.foreach)((0, CSParseTool_1.getDescripts)(f), line => `	/// ${line}`)}
-	/// </summary>
-	public ${(0, CSParseTool_1.getFieldType)(f)} ${(0, CSParseTool_1.convMemberName)(f.name)};
+		/// <summary>
+${(0, export_table_lib_1.foreach)((0, CSParseTool_1.getDescripts)(f), line => `		/// ${line}`)}
+		/// </summary>
+		public ${(0, CSParseTool_1.getFieldType)(f)} ${(0, CSParseTool_1.convMemberName)(f.name)};
 
 ${(0, export_table_lib_1.iff)(f.rawType.startsWith("@"), () => `
-	/// <summary>
-${(0, export_table_lib_1.foreach)((0, CSParseTool_1.getDescripts)(f), line => `	/// ${line}`)}
-	/// </summary>
-	${(0, CSParseTool_1.convTupleArrayType)(f)}`)}`)}
+		/// <summary>
+${(0, export_table_lib_1.foreach)((0, CSParseTool_1.getDescripts)(f), line => `		/// ${line}`)}
+		/// </summary>
+		${(0, CSParseTool_1.convTupleArrayType)(f)}`)}`)}
 
 	${(0, export_table_lib_1.cmm)( /**生成get字段 */)}
 #region get字段
 ${(0, export_table_lib_1.foreach)(fields, f => {
         if (f.nameOrigin != f.name) {
-            return `	public ${(0, CSParseTool_1.getFieldType)(f)} ${(0, CSParseTool_1.getTitle)(f).replace(" ", "_")} => ${(0, CSParseTool_1.convMemberName)(f.name)};`;
+            return `		public ${(0, CSParseTool_1.getFieldType)(f)} ${(0, CSParseTool_1.getTitle)(f).replace(" ", "_")} => ${(0, CSParseTool_1.convMemberName)(f.name)};`;
         }
         else {
             return "";

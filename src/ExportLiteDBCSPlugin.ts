@@ -31,71 +31,75 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ${exportNamespace}{
-[System.Serializable]
-public partial class ${RowClass} {
-
-	private static List<${RowClass}> _configs;
-
-	public static List<${RowClass}> Configs
+namespace ${exportNamespace}
+{
+	[System.Serializable]
+	public partial class ${RowClass}
 	{
-		get
+
+		private static List<${RowClass}> _configs;
+
+		public static List<${RowClass}> Configs
 		{
-			if (_configs == null)
+			get
 			{
-				_configs = Collection.FindAll().ToList();
+				if (_configs == null)
+				{
+					_configs = Collection.FindAll().ToList();
+				}
+
+				return _configs;
 			}
-
-			return _configs;
 		}
-	}
 
-	public ${RowClass}() { }
-	public ${RowClass}(${st(() => fields.map(f => `${getFieldType(f)} ${convVarName(f.name)}`).join(", "))})
-	{
+		public ${RowClass}()
+		{
+		}
+		public ${RowClass}(${st(() => fields.map(f => `${getFieldType(f)} ${convVarName(f.name)}`).join(", "))})
+		{
 ${foreach(fields, f =>
-		`		this.${convMemberName(f.name)} = ${convVarName(f.name)};`
+	`			this.${convMemberName(f.name)} = ${convVarName(f.name)};`
 	)}
-	}
+		}
 
-	public virtual ${RowClass} MergeFrom(${RowClass} source)
-	{
+		public virtual ${RowClass} MergeFrom(${RowClass} source)
+		{
 ${foreach(fields, f =>
-		`		this.${convMemberName(f.name)} = source.${convMemberName(f.name)};`
+	`			this.${convMemberName(f.name)} = source.${convMemberName(f.name)};`
 	)}
-		return this;
-	}
+			return this;
+		}
 
-	public virtual ${RowClass} Clone()
-	{
-		var config = new ${RowClass}();
-		config.MergeFrom(this);
-		return config;
-	}
+		public virtual ${RowClass} Clone()
+		{
+			var config = new ${RowClass}();
+			config.MergeFrom(this);
+			return config;
+		}
 
 	${cmm(/**生成字段 */)}
 ${foreach(fields, f => `
-	/// <summary>
+		/// <summary>
 ${foreach(getDescripts(f), line =>
-		`	/// ${line}`
+	`		/// ${line}`
 	)}
-	/// </summary>
-	public ${getFieldType(f)} ${convMemberName(f.name)};
+		/// </summary>
+		public ${getFieldType(f)} ${convMemberName(f.name)};
 
 ${iff(f.rawType.startsWith("@"), () => `
-	/// <summary>
+		/// <summary>
 ${foreach(getDescripts(f), line =>
-		`	/// ${line}`
+	`		/// ${line}`
 	)}
-	/// </summary>
-	${convTupleArrayType(f)}`)}`
+		/// </summary>
+		${convTupleArrayType(f)}`)}`
 	)}
 
 	${cmm(/**生成get字段 */)}
 #region get字段
 ${foreach(fields, f => {
 		if (f.nameOrigin != f.name) {
-			return `	public ${getFieldType(f)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`
+			return `		public ${getFieldType(f)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`
 		} else {
 			return ""
 		}
