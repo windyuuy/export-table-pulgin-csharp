@@ -129,6 +129,11 @@ namespace ${exportNamespace}
 			Debug.Log("ReferConfig-${RowClass}");
 		}
 #endif
+		[System.Serializable]
+		internal class TempA
+		{
+			public ${RowClass}[] a;
+		}
 		public static async Task Load()
 		{
 			var loadUrl="Assets/Bundles/GameConfigs/Auto/${fullName}.json";
@@ -145,7 +150,8 @@ namespace ${exportNamespace}
 				${RowClass}[] jsonObjs;
 				try
 				{
-					jsonObjs = JSON.parse<${RowClass}[]>(configJson.text);
+					jsonObjs = JsonUtility.FromJson<TempA>("{\\"a\\":"+configJson.text+"}").a;
+					//jsonObjs = JSON.parse<${RowClass}[]>(configJson.text);
 				}
 				catch(System.Exception ex)
 				{

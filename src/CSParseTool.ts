@@ -204,7 +204,7 @@ export const convTupleArrayType = (f: Field) => {
 		let type1 = m[1]
 		let type2 = m[2]
 		let isArray = m[3] != null
-		let line = `public System.Tuple<${type1}, ${type2}>${isArray ? "[]" : ""} ${convMemberName(f.name)}Obj;`
+		let line = `public WritableValueTuple<${type1}, ${type2}>${isArray ? "[]" : ""} ${convMemberName(f.name)}Obj;`
 		return line;
 	} else {
 		return `public ${line0}  ${convMemberName(f.name)}Obj;`

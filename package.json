@@ -1,6 +1,6 @@
 {
   "name": "export-table-pulgin-csharp",
-  "version": "1.1.115",
+  "version": "1.1.129",
   "description": "",
   "main": "./dist/index.js",
   "scripts": {},
@@ -11,9 +11,9 @@
   "author": "windyuuy",
   "license": "ISC",
   "dependencies": {
-    "@types/commander": "^2.12.2",
+    "@types/commander": "2.12.2",
     "@types/node": "^17.0.18",
-    "export-table-lib": "^1.0.59",
+    "export-table-lib": "^1.0.61",
     "fs": "^0.0.1-security",
     "fs-extra": "^10.0.0",
     "fse": "^4.0.1"

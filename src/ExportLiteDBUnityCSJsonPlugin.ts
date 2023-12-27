@@ -130,15 +130,15 @@ namespace ${exportNamespace}
 	{
 		protected static LiteDatabase Database;
 		protected static ILiteCollection<${RowClass}> Collection;
+		public const string CollKey = "${fullName.replace("-", "_")}";
 		public static Task Load()
 		{
 #if UNITY_EDITOR && ENABLE_CONFIG_LOG
 			Debug.Log("ReferConfig-${RowClass}");
 #endif
-			
+			var key = CollKey;
 			var ldb = SharedLiteDB.Database;
 			Database = ldb;
-			const string key = "${fullName.replace("-", "_")}";
 			if (!ldb.CollectionExists(key))
 			{
 				Debug.LogError($"配表资源缺失: {key}");
@@ -170,11 +170,11 @@ export async function RemoveJsonFiles(savePaths2: string[]) {
 	await Promise.all(deleteTasks)
 }
 export async function ConvJson2LiteDB(litedbpath: string, savePaths: string[]) {
-	if (litedbpath != null) {
+	if (litedbpath != null && litedbpath != "") {
 		let modulePath = require.resolve(".")
 		let binPath = path.resolve(modulePath, "../../bin/Json2LiteDB.exe")
 		// let dbPath = path.resolve("../../../GameClient/Assets/Bundles/GameConfigs/Auto/MainConfig.db.bytes");
-		let dbPath = path.resolve(litedbpath)
+		// let dbPath = path.resolve(litedbpath)
 		let savePaths2 = savePaths.map(savePath => path.resolve(savePath))
 		let cmdParas = savePaths2.concat();
 		cmdParas.unshift(litedbpath);
@@ -249,8 +249,13 @@ ${foreach(tables.sort((ta, tb) => ta.name.localeCompare(tb.name)), (table) => `
 		let savePath = paras.outPath + "/DefaultConfigLoader.cs";
 		fs.outputFileSync(savePath, temp, "utf-8");
 
-		var options = new program.Command().option("--litedbpath <string>").parse(process.argv).opts()
-		let litedbpath = options["litedbpath"]
+		// var options = new program.Command().option("--litedbpath <string>").parse(process.argv).allowUnknownOption(true).opts()
+		// let litedbpath = options["litedbpath"]
+		let litedbpathIndex = process.argv.indexOf("--litedbpath")
+		let litedbpath: string = "";
+		if (litedbpathIndex >= 0) {
+			litedbpath = process.argv[litedbpathIndex + 1]
+		}
 		console.log(`litedbpath: ${litedbpath}`);
 
 		let cmdParas = tables.map(table => {

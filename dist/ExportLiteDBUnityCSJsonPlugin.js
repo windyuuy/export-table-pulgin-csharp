@@ -32,7 +32,6 @@ const fs = __importStar(require("fs-extra"));
 const CSParseTool_1 = require("./CSParseTool");
 const path_1 = __importDefault(require("path"));
 const cp = __importStar(require("child_process"));
-const commander_1 = __importDefault(require("commander"));
 var isSkipIndexLoader0 = process.argv.findIndex(v => v == "--SkipIndexLoader") >= 0;
 let firstLetterUpper = export_table_lib_1.makeFirstLetterUpper;
 function exportUJson(paras) {
@@ -137,15 +136,15 @@ namespace ${exportNamespace}
 	{
 		protected static LiteDatabase Database;
 		protected static ILiteCollection<${RowClass}> Collection;
+		public const string CollKey = "${fullName.replace("-", "_")}";
 		public static Task Load()
 		{
 #if UNITY_EDITOR && ENABLE_CONFIG_LOG
 			Debug.Log("ReferConfig-${RowClass}");
 #endif
-			
+			var key = CollKey;
 			var ldb = SharedLiteDB.Database;
 			Database = ldb;
-			const string key = "${fullName.replace("-", "_")}";
 			if (!ldb.CollectionExists(key))
 			{
 				Debug.LogError($"配表资源缺失: {key}");
@@ -177,11 +176,11 @@ async function RemoveJsonFiles(savePaths2) {
 }
 exports.RemoveJsonFiles = RemoveJsonFiles;
 async function ConvJson2LiteDB(litedbpath, savePaths) {
-    if (litedbpath != null) {
+    if (litedbpath != null && litedbpath != "") {
         let modulePath = require.resolve(".");
         let binPath = path_1.default.resolve(modulePath, "../../bin/Json2LiteDB.exe");
         // let dbPath = path.resolve("../../../GameClient/Assets/Bundles/GameConfigs/Auto/MainConfig.db.bytes");
-        let dbPath = path_1.default.resolve(litedbpath);
+        // let dbPath = path.resolve(litedbpath)
         let savePaths2 = savePaths.map(savePath => path_1.default.resolve(savePath));
         let cmdParas = savePaths2.concat();
         cmdParas.unshift(litedbpath);
@@ -246,8 +245,13 @@ ${(0, export_table_lib_1.foreach)(tables.sort((ta, tb) => ta.name.localeCompare(
 `;
         let savePath = paras.outPath + "/DefaultConfigLoader.cs";
         fs.outputFileSync(savePath, temp, "utf-8");
-        var options = new commander_1.default.Command().option("--litedbpath <string>").parse(process.argv).opts();
-        let litedbpath = options["litedbpath"];
+        // var options = new program.Command().option("--litedbpath <string>").parse(process.argv).allowUnknownOption(true).opts()
+        // let litedbpath = options["litedbpath"]
+        let litedbpathIndex = process.argv.indexOf("--litedbpath");
+        let litedbpath = "";
+        if (litedbpathIndex >= 0) {
+            litedbpath = process.argv[litedbpathIndex + 1];
+        }
         console.log(`litedbpath: ${litedbpath}`);
         let cmdParas = tables.map(table => {
             var fullName = `${table.workbookName}-${table.name}`;
