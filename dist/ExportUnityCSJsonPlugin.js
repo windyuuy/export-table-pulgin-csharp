@@ -61,8 +61,8 @@ function exportUJson(paras) {
                     let ssStr = content.substring(index2 + 1, posEnd);
                     let t2 = m[2];
                     let v2 = (0, CSParseTool_1.TryConvValue)(ssStr, t2, f);
-                    console.log(`parseinfo1: ${content}, ${index2}, ${index}, ${numStr}, ${t1}, ${v1}`);
-                    console.log(`parseinfo2: ${content}, ${index2}, ${index}, ${ssStr}, ${t2}, ${v2}`);
+                    // console.log(`parseinfo1: ${content}, ${index2}, ${index}, ${numStr}, ${t1}, ${v1}`)
+                    // console.log(`parseinfo2: ${content}, ${index2}, ${index}, ${ssStr}, ${t2}, ${v2}`)
                     objs.push({
                         Item1: v1,
                         Item2: v2,
@@ -225,7 +225,7 @@ class ExportUJsonPlugin extends export_table_lib_1.PluginBase {
     }
     handleBatch(paras) {
         let { moreOptions, tables, exportNamespace, } = paras;
-        let isSkipIndexLoader = !!moreOptions?.SkipIndexLoader ?? false;
+        let isSkipIndexLoader = moreOptions?.SkipIndexLoader ?? false;
         if (isSkipIndexLoader0) {
             isSkipIndexLoader = true;
         }

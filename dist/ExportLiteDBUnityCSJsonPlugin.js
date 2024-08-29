@@ -219,7 +219,7 @@ class ExportLiteDBUJsonPlugin extends export_table_lib_1.PluginBase {
     }
     async handleBatch(paras) {
         let { moreOptions, tables, exportNamespace, } = paras;
-        let isSkipIndexLoader = !!moreOptions?.SkipIndexLoader ?? false;
+        let isSkipIndexLoader = moreOptions?.SkipIndexLoader ?? false;
         if (isSkipIndexLoader0) {
             isSkipIndexLoader = true;
         }

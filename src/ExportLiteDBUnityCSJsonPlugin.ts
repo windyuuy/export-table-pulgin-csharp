@@ -221,7 +221,7 @@ export class ExportLiteDBUJsonPlugin extends PluginBase {
 			tables,
 			exportNamespace,
 		} = paras
-		let isSkipIndexLoader = !!moreOptions?.SkipIndexLoader ?? false
+		let isSkipIndexLoader = moreOptions?.SkipIndexLoader ?? false
 		if (isSkipIndexLoader0) {
 			isSkipIndexLoader = true
 		}

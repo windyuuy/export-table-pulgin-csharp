@@ -45,8 +45,8 @@ export function exportUJson(paras: HandleSheetParams): string | null {
 					let ssStr = content.substring(index2 + 1, posEnd)
 					let t2 = m[2]
 					let v2 = TryConvValue(ssStr, t2 as any, f);
-					console.log(`parseinfo1: ${content}, ${index2}, ${index}, ${numStr}, ${t1}, ${v1}`)
-					console.log(`parseinfo2: ${content}, ${index2}, ${index}, ${ssStr}, ${t2}, ${v2}`)
+					// console.log(`parseinfo1: ${content}, ${index2}, ${index}, ${numStr}, ${t1}, ${v1}`)
+					// console.log(`parseinfo2: ${content}, ${index2}, ${index}, ${ssStr}, ${t2}, ${v2}`)
 					objs.push({
 						Item1: v1,
 						Item2: v2,
@@ -229,7 +229,7 @@ export class ExportUJsonPlugin extends PluginBase {
 			tables,
 			exportNamespace,
 		} = paras
-		let isSkipIndexLoader = !!moreOptions?.SkipIndexLoader ?? false
+		let isSkipIndexLoader = moreOptions?.SkipIndexLoader ?? false
 		if (isSkipIndexLoader0) {
 			isSkipIndexLoader = true
 		}
