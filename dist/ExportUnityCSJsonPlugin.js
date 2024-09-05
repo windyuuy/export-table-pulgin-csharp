@@ -38,7 +38,8 @@ function exportUJson(paras) {
             let key = f.name;
             var newKey = (0, CSParseTool_1.convMemberName)(key);
             newObj[newKey] = obj[key];
-            let m = f.rawType.match(/\@\((\w+),(\w+)\)(\[\])?/);
+            var line = f.rawType.replaceAll(/(?<=[^\w])(boolean)(?=[^\w]|$)/g, "bool");
+            let m = line.match(/\@\((\w+),(\w+)\)(\[\])?/);
             if (m != null) {
                 // [{"Item1":99,"Item2":"klwjefl"}]
                 let content = obj[key];

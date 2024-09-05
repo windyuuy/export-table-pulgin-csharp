@@ -26,102 +26,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ExportLiteDBUJsonPlugin = exports.ConvJson2LiteDB = exports.RemoveJsonFiles = exports.exportUJsonLoader = exports.exportUJson = void 0;
+exports.ExportLiteDBUJsonPlugin = exports.ConvJson2LiteDB = exports.RemoveJsonFiles = exports.exportUJsonLoader = void 0;
 const export_table_lib_1 = require("export-table-lib");
 const fs = __importStar(require("fs-extra"));
 const CSParseTool_1 = require("./CSParseTool");
 const path_1 = __importDefault(require("path"));
 const cp = __importStar(require("child_process"));
+const ExportUnityCSJsonPlugin_1 = require("./ExportUnityCSJsonPlugin");
 var isSkipIndexLoader0 = process.argv.findIndex(v => v == "--SkipIndexLoader") >= 0;
-let firstLetterUpper = export_table_lib_1.makeFirstLetterUpper;
-function exportUJson(paras) {
-    let { datas, fields, name, objects, table, } = paras;
-    var fullName = `${table.workbookName}-${name}`;
-    let jsonString = JSON.stringify(objects.map(obj => {
-        var newObj = Object.create(null);
-        for (let f of fields) {
-            let key = f.name;
-            var newKey = (0, CSParseTool_1.convMemberName)(key);
-            newObj[newKey] = obj[key];
-            var line = f.rawType.replaceAll(/(?<=[^\w])(boolean)(?=[^\w]|$)/g, "bool");
-            let m = line.match(/\@\((\w+),(\w+)\)(\[\])?/);
-            if (m != null) {
-                // [{"Item1":99,"Item2":"klwjefl"}]
-                let content = obj[key];
-                let index = 0;
-                let index2 = -1;
-                let objs = [];
-                while (0 <= index && index < content.length) {
-                    index2 = content.indexOf("|", index);
-                    if (index2 == -1) {
-                        if (content.length > 0) {
-                            console.error(`表格格式错误，缺少部分数据，将用默认值填充: ${content}`);
-                        }
-                        index2 = content.indexOf(";;", index);
-                        index = index2;
-                    }
-                    else {
-                        index = content.indexOf(";;", index2);
-                    }
-                    let numStr = content.substring(index, index2);
-                    let t1 = m[1];
-                    let v1 = (0, CSParseTool_1.TryConvValue)(numStr, t1, f);
-                    let posEnd = index;
-                    if (index == -1) {
-                        posEnd = content.length;
-                    }
-                    else {
-                        index += 2;
-                    }
-                    let ssStr = content.substring(index2 + 1, posEnd);
-                    let t2 = m[2];
-                    let v2 = (0, CSParseTool_1.TryConvValue)(ssStr, t2, f);
-                    // console.log(`parseinfo1: ${content}, ${index2}, ${index}, ${numStr}, ${t1}, ${v1}`)
-                    // console.log(`parseinfo2: ${content}, ${index2}, ${index}, ${ssStr}, ${t2}, ${v2}`)
-                    objs.push({
-                        Item1: v1,
-                        Item2: v2,
-                    });
-                }
-                let isArray = m[3] == "[]";
-                if (isArray) {
-                    newObj[newKey + "Obj"] = objs;
-                }
-                else {
-                    if (objs.length > 1) {
-                        console.log(`配置错误，过多的条目数量: ${content}`);
-                    }
-                    newObj[newKey + "Obj"] = objs[0] ?? {};
-                }
-            }
-        }
-        // Object.keys(obj).forEach(key => {
-        // 	var newKey = convMemberName(key);
-        // 	newObj[newKey] = obj[key];
-        // })
-        return newObj;
-    }));
-    return jsonString;
-    // 	// !!!必须开头没有空格
-    // 	let temp = `%YAML 1.1
-    // %TAG !u! tag:unity3d.com,2011:
-    // --- !u!114 &11400000
-    // MonoBehaviour:
-    //   m_ObjectHideFlags: 0
-    //   m_CorrespondingSourceObject: {fileID: 0}
-    //   m_PrefabInstance: {fileID: 0}
-    //   m_PrefabAsset: {fileID: 0}
-    //   m_GameObject: {fileID: 0}
-    //   m_Enabled: 1
-    //   m_EditorHideFlags: 0
-    //   m_Script: {fileID: 11500000, guid: 496f60086c072a8479a6e0b948efb5e8, type: 3}
-    //   m_Name: ${fullName}
-    //   m_EditorClassIdentifier:
-    //   JsonText: ${JSON.stringify(jsonString)}
-    // `
-    // 	return temp
-}
-exports.exportUJson = exportUJson;
 function exportUJsonLoader(paras) {
     let { datas, fields, name, objects, table, exportNamespace, } = paras;
     let jsonToolNamespaceIndex = process.argv.findIndex(v => v == "--JsonToolNamespace");
@@ -129,7 +41,7 @@ function exportUJsonLoader(paras) {
     if (jsonToolNamespaceIndex >= 0 && process.argv.length > jsonToolNamespaceIndex + 1) {
         jsonToolNamespace = process.argv[jsonToolNamespaceIndex + 1];
     }
-    let RowClass = firstLetterUpper(name);
+    let RowClass = (0, CSParseTool_1.firstLetterUpper)(name);
     var fullName = `${table.workbookName}-${name}`;
     // !!!必须开头没有空格
     let temp = `
@@ -218,7 +130,7 @@ class ExportLiteDBUJsonPlugin extends export_table_lib_1.PluginBase {
             }
         }
         {
-            let content2 = exportUJson(paras);
+            let content2 = (0, ExportUnityCSJsonPlugin_1.exportUJson)(paras);
             if (content2 != null) {
                 let savePath = new export_table_lib_1.OutFilePath(paras.outPath, fullName, ".json").fullPath;
                 fs.outputFileSync(savePath, content2, "utf-8");
@@ -245,7 +157,7 @@ namespace ${exportNamespace}
 	public static class DefaultConfigLoader{
 		public static IEnumerable<Func<Task>> Load(){
 ${(0, export_table_lib_1.foreach)(tables.sort((ta, tb) => ta.name.localeCompare(tb.name)), (table) => `
-			yield return ${firstLetterUpper(table.name)}.Load;
+			yield return ${(0, CSParseTool_1.firstLetterUpper)(table.name)}.Load;
 `)}
 			yield break;
 		}
