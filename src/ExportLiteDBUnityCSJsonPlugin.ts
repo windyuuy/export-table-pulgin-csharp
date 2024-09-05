@@ -36,10 +36,18 @@ export function exportUJson(paras: HandleSheetParams): string | null {
 				let objs: object[] = []
 				while (0 <= index && index < content.length) {
 					index2 = content.indexOf("|", index)
+					if (index2 == -1) {
+						if (content.length > 0) {
+							console.error(`表格格式错误，缺少部分数据，将用默认值填充: ${content}`)
+						}
+						index2 = content.indexOf(";;", index)
+						index = index2
+					} else {
+						index = content.indexOf(";;", index2)
+					}
 					let numStr = content.substring(index, index2)
 					let t1 = m[1]
 					let v1 = TryConvValue(numStr, t1 as any, f);
-					index = content.indexOf(";;", index2)
 					let posEnd = index
 					if (index == -1) {
 						posEnd = content.length
@@ -49,8 +57,8 @@ export function exportUJson(paras: HandleSheetParams): string | null {
 					let ssStr = content.substring(index2 + 1, posEnd)
 					let t2 = m[2]
 					let v2 = TryConvValue(ssStr, t2 as any, f);
-					console.log(`parseinfo1: ${content}, ${index2}, ${index}, ${numStr}, ${t1}, ${v1}`)
-					console.log(`parseinfo2: ${content}, ${index2}, ${index}, ${ssStr}, ${t2}, ${v2}`)
+					// console.log(`parseinfo1: ${content}, ${index2}, ${index}, ${numStr}, ${t1}, ${v1}`)
+					// console.log(`parseinfo2: ${content}, ${index2}, ${index}, ${ssStr}, ${t2}, ${v2}`)
 					objs.push({
 						Item1: v1,
 						Item2: v2,
