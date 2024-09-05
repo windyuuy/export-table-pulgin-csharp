@@ -23,7 +23,8 @@ export function exportUJson(paras: HandleSheetParams): string | null {
 			var newKey = convMemberName(key);
 			newObj[newKey] = obj[key];
 
-			let m = f.rawType.match(/\@\((\w+),(\w+)\)(\[\])?/)
+			var line = f.rawType.replaceAll(/(?<=[^\w])(boolean)(?=[^\w]|$)/g, "bool");
+			let m = line.match(/\@\((\w+),(\w+)\)(\[\])?/)
 			if (m != null) {
 				// [{"Item1":99,"Item2":"klwjefl"}]
 				let content = obj[key] as string;
@@ -81,24 +82,24 @@ export function exportUJson(paras: HandleSheetParams): string | null {
 
 	return jsonString;
 
-// 	// !!!必须开头没有空格
-// 	let temp = `%YAML 1.1
-// %TAG !u! tag:unity3d.com,2011:
-// --- !u!114 &11400000
-// MonoBehaviour:
-//   m_ObjectHideFlags: 0
-//   m_CorrespondingSourceObject: {fileID: 0}
-//   m_PrefabInstance: {fileID: 0}
-//   m_PrefabAsset: {fileID: 0}
-//   m_GameObject: {fileID: 0}
-//   m_Enabled: 1
-//   m_EditorHideFlags: 0
-//   m_Script: {fileID: 11500000, guid: 496f60086c072a8479a6e0b948efb5e8, type: 3}
-//   m_Name: ${fullName}
-//   m_EditorClassIdentifier:
-//   JsonText: ${JSON.stringify(jsonString)}
-// `
-// 	return temp
+	// 	// !!!必须开头没有空格
+	// 	let temp = `%YAML 1.1
+	// %TAG !u! tag:unity3d.com,2011:
+	// --- !u!114 &11400000
+	// MonoBehaviour:
+	//   m_ObjectHideFlags: 0
+	//   m_CorrespondingSourceObject: {fileID: 0}
+	//   m_PrefabInstance: {fileID: 0}
+	//   m_PrefabAsset: {fileID: 0}
+	//   m_GameObject: {fileID: 0}
+	//   m_Enabled: 1
+	//   m_EditorHideFlags: 0
+	//   m_Script: {fileID: 11500000, guid: 496f60086c072a8479a6e0b948efb5e8, type: 3}
+	//   m_Name: ${fullName}
+	//   m_EditorClassIdentifier:
+	//   JsonText: ${JSON.stringify(jsonString)}
+	// `
+	// 	return temp
 
 }
 
@@ -114,8 +115,8 @@ export function exportUJsonLoader(paras: HandleSheetParams): string | null {
 
 	let jsonToolNamespaceIndex = process.argv.findIndex(v => v == "--JsonToolNamespace")
 	let jsonToolNamespace = "lang.json";
-	if(jsonToolNamespaceIndex>=0 && process.argv.length>jsonToolNamespaceIndex+1){
-		jsonToolNamespace = process.argv[jsonToolNamespaceIndex+1]
+	if (jsonToolNamespaceIndex >= 0 && process.argv.length > jsonToolNamespaceIndex + 1) {
+		jsonToolNamespace = process.argv[jsonToolNamespaceIndex + 1]
 	}
 
 	let RowClass = firstLetterUpper(name)
