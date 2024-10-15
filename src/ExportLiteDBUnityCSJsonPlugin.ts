@@ -19,7 +19,7 @@ export function exportUJsonLoader(paras: HandleSheetParams): string | null {
 		exportNamespace,
 	} = paras;
 
-	let jsonToolNamespaceIndex = process.argv.findIndex(v => v == "--JsonToolNamespace")
+	let jsonToolNamespaceIndex = process.argv.findIndex(v => v == "--AssetToolNamespace")
 	let jsonToolNamespace = "lang.json";
 	if (jsonToolNamespaceIndex >= 0 && process.argv.length > jsonToolNamespaceIndex + 1) {
 		jsonToolNamespace = process.argv[jsonToolNamespaceIndex + 1]

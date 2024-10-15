@@ -36,7 +36,7 @@ const ExportUnityCSJsonPlugin_1 = require("./ExportUnityCSJsonPlugin");
 var isSkipIndexLoader0 = process.argv.findIndex(v => v == "--SkipIndexLoader") >= 0;
 function exportUJsonLoader(paras) {
     let { datas, fields, name, objects, table, exportNamespace, } = paras;
-    let jsonToolNamespaceIndex = process.argv.findIndex(v => v == "--JsonToolNamespace");
+    let jsonToolNamespaceIndex = process.argv.findIndex(v => v == "--AssetToolNamespace");
     let jsonToolNamespace = "lang.json";
     if (jsonToolNamespaceIndex >= 0 && process.argv.length > jsonToolNamespaceIndex + 1) {
         jsonToolNamespace = process.argv[jsonToolNamespaceIndex + 1];

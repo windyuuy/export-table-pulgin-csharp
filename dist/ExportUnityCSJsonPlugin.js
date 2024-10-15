@@ -50,7 +50,7 @@ function exportUJson(paras) {
                     index2 = content.indexOf("|", index);
                     if (index2 == -1) {
                         if (content.length > 0) {
-                            console.error(`表格格式错误，缺少部分数据，将用默认值填充: ${content}`);
+                            console.error(`表格格式错误，缺少部分数据，将用默认值填充<${key}>: ${content}`);
                         }
                         index2 = content.indexOf(";;", index);
                         index = index2;
@@ -119,7 +119,7 @@ function exportUJson(paras) {
 exports.exportUJson = exportUJson;
 function exportUJsonLoader(paras) {
     let { datas, fields, name, objects, table, exportNamespace, } = paras;
-    let jsonToolNamespaceIndex = process.argv.findIndex(v => v == "--JsonToolNamespace");
+    let jsonToolNamespaceIndex = process.argv.findIndex(v => v == "--AssetToolNamespace");
     let jsonToolNamespace = "lang.json";
     if (jsonToolNamespaceIndex >= 0 && process.argv.length > jsonToolNamespaceIndex + 1) {
         jsonToolNamespace = process.argv[jsonToolNamespaceIndex + 1];
@@ -151,21 +151,14 @@ namespace ${exportNamespace}
 		public static async Task Load()
 		{
 			var loadUrl="Assets/Bundles/GameConfigs/Auto/${fullName}.json";
-			var configJson =
-#if UNITY_EDITOR
-				Application.isPlaying ? await Addressables.LoadAssetAsync<TextAsset>(loadUrl).Task
-					: UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>(loadUrl);
-#else
-				await Addressables.LoadAssetAsync<TextAsset>(loadUrl).Task;
-#endif
+			var configJson = await ConfigAssetLoader.LoadAssetAsync(loadUrl);
 			if (configJson != null)
 			{
 				Debug.Log($"解析配表: {loadUrl}");
 				${RowClass}[] jsonObjs;
 				try
 				{
-					jsonObjs = JsonUtility.FromJson<TempA>("{\\"a\\":"+configJson.text+"}").a;
-					//jsonObjs = JSON.parse<${RowClass}[]>(configJson.text);
+					jsonObjs = JsonUtility.FromJson<TempA>("{\\"a\\":"+configJson+"}").a;
 				}
 				catch(System.Exception ex)
 				{
@@ -195,7 +188,17 @@ namespace ${exportNamespace}
 			var configJson = UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>(loadUrl);
 			if (configJson != null)
 			{
-				var jsonObjs = JSON.parse<${RowClass}[]>(configJson.text);
+				${RowClass}[] jsonObjs;
+				try
+				{
+					jsonObjs = JsonUtility.FromJson<TempA>("{\\"a\\":"+configJson.text+"}").a;
+					//jsonObjs = JSON.parse<${RowClass}[]>(configJson.text);
+				}
+				catch(System.Exception ex)
+				{
+					Debug.LogError($"解析配表失败: {loadUrl}");
+                    throw ex;
+				}
 				var configs = ${RowClass}.Configs;
 				configs.Clear();
 				configs.AddRange(jsonObjs);
