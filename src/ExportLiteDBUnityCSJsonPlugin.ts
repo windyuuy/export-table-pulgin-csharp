@@ -29,7 +29,6 @@ export function exportUJsonLoader(paras: HandleSheetParams): string | null {
 	var fullName = `${table.workbookName}-${name}`
 	// !!!必须开头没有空格
 	let temp = `
-using UnityEngine.AddressableAssets;
 using System.Threading.Tasks;
 using LiteDB;
 using UnityEngine;
