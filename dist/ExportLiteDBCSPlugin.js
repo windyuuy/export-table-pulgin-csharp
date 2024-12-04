@@ -29,7 +29,7 @@ const CSParseTool_1 = require("./CSParseTool");
 const fs = __importStar(require("fs-extra"));
 function export_stuff(paras) {
     let { datas, fields, inject, name, objects, packagename, tables, xxtea, exportNamespace, moreOptions, } = paras;
-    let isSkipExportDefaults = !!moreOptions?.SkipDefaults ?? false;
+    let isSkipExportDefaults = !!(moreOptions?.SkipDefaults ?? false);
     if (CSParseTool_1.isSkipExportDefaults0) {
         isSkipExportDefaults = true;
     }
@@ -94,7 +94,7 @@ ${(0, export_table_lib_1.iff)(f.rawType.startsWith("@"), () => `
 		/// <summary>
 ${(0, export_table_lib_1.foreach)((0, CSParseTool_1.getDescripts)(f), line => `		/// ${line}`)}
 		/// </summary>
-		${(0, CSParseTool_1.convTupleArrayType)(f)}`)}`)}
+		${(0, CSParseTool_1.convTupleArrayTypeDefine)(f)}`)}`)}
 
 	${(0, export_table_lib_1.cmm)( /**生成get字段 */)}
 #region get字段

@@ -36,11 +36,7 @@ const ExportUnityCSJsonPlugin_1 = require("./ExportUnityCSJsonPlugin");
 var isSkipIndexLoader0 = process.argv.findIndex(v => v == "--SkipIndexLoader") >= 0;
 function exportUJsonLoader(paras) {
     let { datas, fields, name, objects, table, exportNamespace, } = paras;
-    let jsonToolNamespaceIndex = process.argv.findIndex(v => v == "--AssetToolNamespace");
-    let jsonToolNamespace = "lang.json";
-    if (jsonToolNamespaceIndex >= 0 && process.argv.length > jsonToolNamespaceIndex + 1) {
-        jsonToolNamespace = process.argv[jsonToolNamespaceIndex + 1];
-    }
+    let useJsonToolNamesapce = (0, CSParseTool_1.GetUsingJsonToolNamespace)();
     let RowClass = (0, CSParseTool_1.firstLetterUpper)(name);
     var fullName = `${table.workbookName}-${name}`;
     // !!!必须开头没有空格
@@ -48,7 +44,7 @@ function exportUJsonLoader(paras) {
 using System.Threading.Tasks;
 using LiteDB;
 using UnityEngine;
-using ${jsonToolNamespace};
+${useJsonToolNamesapce}
 
 namespace ${exportNamespace}
 {

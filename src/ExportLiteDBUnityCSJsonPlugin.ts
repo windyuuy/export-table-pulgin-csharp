@@ -1,10 +1,9 @@
 
 import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, OutFilePath, makeFirstLetterUpper } from "export-table-lib"
 import * as fs from "fs-extra"
-import { TryConvValue, convMemberName, firstLetterUpper } from "./CSParseTool";
+import { GetUsingJsonToolNamespace, TryConvValue, convMemberName, firstLetterUpper } from "./CSParseTool";
 import path from "path";
 import * as cp from "child_process"
-import program from "commander"
 import { exportUJson } from "./ExportUnityCSJsonPlugin";
 
 var isSkipIndexLoader0 = process.argv.findIndex(v => v == "--SkipIndexLoader") >= 0
@@ -19,11 +18,7 @@ export function exportUJsonLoader(paras: HandleSheetParams): string | null {
 		exportNamespace,
 	} = paras;
 
-	let jsonToolNamespaceIndex = process.argv.findIndex(v => v == "--AssetToolNamespace")
-	let jsonToolNamespace = "lang.json";
-	if (jsonToolNamespaceIndex >= 0 && process.argv.length > jsonToolNamespaceIndex + 1) {
-		jsonToolNamespace = process.argv[jsonToolNamespaceIndex + 1]
-	}
+	let useJsonToolNamesapce = GetUsingJsonToolNamespace()
 
 	let RowClass = firstLetterUpper(name)
 	var fullName = `${table.workbookName}-${name}`
@@ -32,7 +27,7 @@ export function exportUJsonLoader(paras: HandleSheetParams): string | null {
 using System.Threading.Tasks;
 using LiteDB;
 using UnityEngine;
-using ${jsonToolNamespace};
+${useJsonToolNamesapce}
 
 namespace ${exportNamespace}
 {

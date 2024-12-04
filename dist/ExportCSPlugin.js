@@ -28,8 +28,8 @@ const export_table_lib_1 = require("export-table-lib");
 const CSParseTool_1 = require("./CSParseTool");
 const fs = __importStar(require("fs-extra"));
 function export_stuff(paras) {
-    let { datas, fields, inject, name, objects, packagename, tables, xxtea, exportNamespace, moreOptions, } = paras;
-    let isSkipExportDefaults = !!moreOptions?.SkipDefaults ?? false;
+    let { datas, fields, inject, name, objects, packagename, tables, xxtea, exportNamespace, moreOptions, allTags, } = paras;
+    let isSkipExportDefaults = !!(moreOptions?.SkipDefaults ?? false);
     if (CSParseTool_1.isSkipExportDefaults0) {
         isSkipExportDefaults = true;
     }
@@ -37,9 +37,21 @@ function export_stuff(paras) {
     let initFunc = name + "Init";
     let mapfield = fields.find(a => a.type == "key"); //如果是map，则生成对应的map
     let mapName = name + "Map";
+    let customFields = [];
+    for (let f2 of fields) {
+        customFields.push(f2);
+        let f3 = (0, CSParseTool_1.convTupleArrayType)(f2);
+        if (f3 != undefined) {
+            customFields.push(f3);
+        }
+    }
+    let isMMPEnabled = allTags.indexOf('csharp:mmp') != -1;
+    let mmpNamespace = isMMPEnabled ? CSParseTool_1.useMMPNamespace : "";
     let temp = `
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+${mmpNamespace}
 
 namespace ${exportNamespace}{
 [System.Serializable]
@@ -48,19 +60,19 @@ public partial class ${RowClass} {
 	public static List<${RowClass}> Configs = new List<${RowClass}>()
 	{
 ${(0, export_table_lib_1.iff)(!isSkipExportDefaults, () => `
-${(0, export_table_lib_1.foreach)(datas, data => `		new ${RowClass}(${(0, export_table_lib_1.st)(() => fields.map((f, index) => (0, CSParseTool_1.genValue)(data[index], f)).join(", "))}),`)}
+${(0, export_table_lib_1.foreach)(datas, data => `		new ${RowClass}(${(0, export_table_lib_1.st)(() => customFields.map((f, index) => (0, CSParseTool_1.genValue)(data[f.index], f)).join(", "))}),`)}
 `)}
 	};
 
 	public ${RowClass}() { }
-	public ${RowClass}(${(0, export_table_lib_1.st)(() => fields.map(f => `${(0, CSParseTool_1.getFieldType)(f)} ${(0, CSParseTool_1.convVarName)(f.name)}`).join(", "))})
+	public ${RowClass}(${(0, export_table_lib_1.st)(() => customFields.map(f => `${(0, CSParseTool_1.getFieldType)(f)} ${(0, CSParseTool_1.convVarName)(f.name)}`).join(", "))})
 	{
-${(0, export_table_lib_1.foreach)(fields, f => `		this.${(0, CSParseTool_1.convMemberName)(f.name)} = ${(0, CSParseTool_1.convVarName)(f.name)};`)}
+${(0, export_table_lib_1.foreach)(customFields, f => `		this.${(0, CSParseTool_1.convMemberName)(f.name)} = ${(0, CSParseTool_1.convVarName)(f.name)};`)}
 	}
 
 	public virtual ${RowClass} MergeFrom(${RowClass} source)
 	{
-${(0, export_table_lib_1.foreach)(fields, f => `		this.${(0, CSParseTool_1.convMemberName)(f.name)} = source.${(0, CSParseTool_1.convMemberName)(f.name)};`)}
+${(0, export_table_lib_1.foreach)(customFields, f => `		this.${(0, CSParseTool_1.convMemberName)(f.name)} = source.${(0, CSParseTool_1.convMemberName)(f.name)};`)}
 		return this;
 	}
 
@@ -76,13 +88,15 @@ ${(0, export_table_lib_1.foreach)(fields, f => `
 	/// <summary>
 ${(0, export_table_lib_1.foreach)((0, CSParseTool_1.getDescripts)(f), line => `	/// ${line}`)}
 	/// </summary>
+	${(0, CSParseTool_1.getFieldAnnotation)(f)}
 	public ${(0, CSParseTool_1.getFieldType)(f)} ${(0, CSParseTool_1.convMemberName)(f.name)};
 
 ${(0, export_table_lib_1.iff)(f.rawType.startsWith("@"), () => `
 	/// <summary>
 ${(0, export_table_lib_1.foreach)((0, CSParseTool_1.getDescripts)(f), line => `	/// ${line}`)}
 	/// </summary>
-	${(0, CSParseTool_1.convTupleArrayType)(f)}`)}`)}
+	${(0, CSParseTool_1.getCustomFieldTypeAnnotation)(f)}
+	${(0, CSParseTool_1.convTupleArrayTypeDefine)(f)}`)}`)}
 
 	${(0, export_table_lib_1.cmm)( /**生成get字段 */)}
 #region get字段

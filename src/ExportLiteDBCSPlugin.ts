@@ -1,6 +1,6 @@
 
 import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, iff, FieldType, makeFirstLetterLower, DataTable, OutFilePath } from "export-table-lib"
-import { convMemberName, convTupleArrayType, convVarName, firstLetterUpper, genValue, getDescripts, getFieldType, getFkFieldType, getTitle, isSkipExportDefaults0 } from "./CSParseTool"
+import { convMemberName, convTupleArrayTypeDefine, convVarName, firstLetterUpper, genValue, getDescripts, getFieldType, getFkFieldType, getTitle, isSkipExportDefaults0 } from "./CSParseTool"
 import * as fs from "fs-extra"
 
 export function export_stuff(paras: HandleSheetParams): string | null {
@@ -17,7 +17,7 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 		moreOptions,
 	} = paras;
 
-	let isSkipExportDefaults = !!moreOptions?.SkipDefaults ?? false
+	let isSkipExportDefaults = !!(moreOptions?.SkipDefaults ?? false)
 	if (isSkipExportDefaults0) {
 		isSkipExportDefaults = true
 	}
@@ -92,7 +92,7 @@ ${foreach(getDescripts(f), line =>
 	`		/// ${line}`
 	)}
 		/// </summary>
-		${convTupleArrayType(f)}`)}`
+		${convTupleArrayTypeDefine(f)}`)}`
 	)}
 
 	${cmm(/**生成get字段 */)}

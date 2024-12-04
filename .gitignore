@@ -103,3 +103,5 @@ typings/
 .tern-port
 /test/src
 /test/dist
+/pnpm-lock.yaml
+/package-lock.json

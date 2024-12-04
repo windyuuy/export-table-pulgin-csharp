@@ -1,7 +1,7 @@
 
 import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, OutFilePath, makeFirstLetterUpper } from "export-table-lib"
 import * as fs from "fs-extra"
-import { TryConvValue, convMemberName } from "./CSParseTool";
+import { GetUsingJsonToolNamespace, TryConvValue, convMemberName, genTupleArrayValue, isEnableMMP } from "./CSParseTool";
 
 var isSkipIndexLoader0 = process.argv.findIndex(v => v == "--SkipIndexLoader") >= 0
 
@@ -23,46 +23,10 @@ export function exportUJson(paras: HandleSheetParams): string | null {
 			var newKey = convMemberName(key);
 			newObj[newKey] = obj[key];
 
-			var line = f.rawType.replaceAll(/(?<=[^\w])(boolean)(?=[^\w]|$)/g, "bool");
-			let m = line.match(/\@\((\w+),(\w+)\)(\[\])?/)
-			if (m != null) {
-				// [{"Item1":99,"Item2":"klwjefl"}]
-				let content = obj[key] as string;
-				let index = 0;
-				let index2 = -1;
-				let objs: object[] = []
-				while (0 <= index && index < content.length) {
-					index2 = content.indexOf("|", index)
-					if (index2 == -1) {
-						if (content.length > 0) {
-							console.error(`表格格式错误，缺少部分数据，将用默认值填充<${key}>: ${content}`)
-						}
-						index2 = content.indexOf(";;", index)
-						index = index2
-					} else {
-						index = content.indexOf(";;", index2)
-					}
-					let numStr = content.substring(index, index2)
-					let t1 = m[1]
-					let v1 = TryConvValue(numStr, t1 as any, f);
-					let posEnd = index
-					if (index == -1) {
-						posEnd = content.length
-					} else {
-						index += 2
-					}
-					let ssStr = content.substring(index2 + 1, posEnd)
-					let t2 = m[2]
-					let v2 = TryConvValue(ssStr, t2 as any, f);
-					// console.log(`parseinfo1: ${content}, ${index2}, ${index}, ${numStr}, ${t1}, ${v1}`)
-					// console.log(`parseinfo2: ${content}, ${index2}, ${index}, ${ssStr}, ${t2}, ${v2}`)
-					objs.push({
-						Item1: v1,
-						Item2: v2,
-					})
-				}
-
-				let isArray = m[3] == "[]"
+			let content = obj[key]
+			let result = genTupleArrayValue(f, content)
+			if (result != null) {
+				let { isArray, objs } = result
 				if (isArray) {
 					newObj[newKey + "Obj"] = objs
 				} else {
@@ -111,21 +75,23 @@ export function exportUJsonLoader(paras: HandleSheetParams): string | null {
 		objects,
 		table,
 		exportNamespace,
+		allTags,
 	} = paras;
 
-	let jsonToolNamespaceIndex = process.argv.findIndex(v => v == "--AssetToolNamespace")
-	let jsonToolNamespace = "lang.json";
-	if (jsonToolNamespaceIndex >= 0 && process.argv.length > jsonToolNamespaceIndex + 1) {
-		jsonToolNamespace = process.argv[jsonToolNamespaceIndex + 1]
-	}
+	let useJsonToolNamesapce = GetUsingJsonToolNamespace()
 
 	let RowClass = firstLetterUpper(name)
-	var fullName = `${table.workbookName}-${name}`
+	let fullName = `${table.workbookName}-${name}`
+
+	let isMMP = isEnableMMP || allTags.indexOf('csharp:mmp') != -1
+	let fileExt = isMMP ? ".bytes" : ".json"
+
 	// !!!必须开头没有空格
 	let temp = `
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
-using ${jsonToolNamespace};
+${useJsonToolNamesapce}
 
 namespace ${exportNamespace}
 {
@@ -138,30 +104,30 @@ namespace ${exportNamespace}
 		}
 #endif
 		[System.Serializable]
-		internal class TempA
+		private struct TempA
 		{
-			public ${RowClass}[] a;
+			public List<${RowClass}> a;
 		}
+
+		public const string LoadUrl = "Assets/Bundles/GameConfigs/Auto/${fullName}${fileExt}";
+
 		public static async Task Load()
 		{
-			var loadUrl="Assets/Bundles/GameConfigs/Auto/${fullName}.json";
-			var configJson = await ConfigAssetLoader.LoadAssetAsync(loadUrl);
-			if (configJson != null)
+			var loadUrl = LoadUrl;
+			var configLiteral = await ConfigAssetLoader.LoadAssetAsync(loadUrl);
+			if (configLiteral != null)
 			{
 				Debug.Log($"解析配表: {loadUrl}");
-				${RowClass}[] jsonObjs;
 				try
 				{
-					jsonObjs = JsonUtility.FromJson<TempA>("{\\"a\\":"+configJson+"}").a;
+					// JsonUtility.FromJsonOverwrite("{\\"a\\":"+configLiteral+"}", obj);
+					ConfigAssetLoader.LoadConfigs(configLiteral, Configs);
 				}
 				catch(System.Exception ex)
 				{
 					Debug.LogError($"解析配表失败: {loadUrl}");
                     throw ex;
 				}
-				var configs = ${RowClass}.Configs;
-				configs.Clear();
-				configs.AddRange(jsonObjs);
 			}
 			else
 			{
@@ -170,7 +136,7 @@ namespace ${exportNamespace}
 		}
 
 #if UNITY_EDITOR
-		public static void LoadInEditor(bool force = false)
+		public static void LoadInEditor(bool force = false, System.Func<string, string> pathConverter = null)
 		{
 			if (Application.isPlaying && (!force))
 			{
@@ -178,24 +144,23 @@ namespace ${exportNamespace}
 				Debug.LogError(tip);
 				throw new System.Exception(tip);
 			}
-			var loadUrl="Assets/Bundles/GameConfigs/Auto/${fullName}.json";
-			var configJson = UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>(loadUrl);
+			var loadUrl = pathConverter == null ? LoadUrl : pathConverter(LoadUrl);
+			var configJson = System.IO.File.ReadAllText(loadUrl, System.Text.Encoding.UTF8);
 			if (configJson != null)
 			{
-				${RowClass}[] jsonObjs;
+				var obj = new TempA()
+				{
+					a=${RowClass}.Configs,
+				};
 				try
 				{
-					jsonObjs = JsonUtility.FromJson<TempA>("{\\"a\\":"+configJson.text+"}").a;
-					//jsonObjs = JSON.parse<${RowClass}[]>(configJson.text);
+					JsonUtility.FromJsonOverwrite("{\\"a\\":"+configJson+"}", obj);
 				}
 				catch(System.Exception ex)
 				{
 					Debug.LogError($"解析配表失败: {loadUrl}");
                     throw ex;
 				}
-				var configs = ${RowClass}.Configs;
-				configs.Clear();
-				configs.AddRange(jsonObjs);
 			}
 			else
 			{
@@ -262,6 +227,15 @@ ${foreach(tables.sort((ta, tb) => ta.name.localeCompare(tb.name)), (table) => `
 `)}
 			yield break;
 		}
+		
+#if UNITY_EDITOR
+		public static IEnumerable<Action<bool, System.Func<string, string>>> LoadInEditor(){
+${foreach(tables.sort((ta, tb) => ta.name.localeCompare(tb.name)), (table) => `
+			yield return ${firstLetterUpper(table.name)}.LoadInEditor;
+`)}
+			yield break;
+		}
+#endif
 	}
 }
 `

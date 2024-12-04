@@ -1,0 +1,1 @@
+{"version":3,"file":"ExportUnityMMPPlugin.d.ts","sourceRoot":"","sources":["../src/ExportUnityMMPPlugin.ts"],"names":[],"mappings":"AACA,OAAO,EAAO,iBAAiB,EAA+B,UAAU,EAA6D,MAAM,kBAAkB,CAAA;AAQ7J,wBAAgB,SAAS,CAAC,KAAK,EAAE,iBAAiB,GAAG,MAAM,GAAG,IAAI,CAqGjE;AAED,qBAAa,oBAAqB,SAAQ,UAAU;IACnD,IAAI,SAAQ;IACZ,IAAI,EAAE,MAAM,EAAE,CAAU;IAExB,WAAW,CAAC,KAAK,EAAE,iBAAiB;CAUpC"}

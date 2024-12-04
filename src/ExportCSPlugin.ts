@@ -1,6 +1,6 @@
 
 import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, iff, FieldType, makeFirstLetterLower, DataTable } from "export-table-lib"
-import { convMemberName, convTupleArrayType, convVarName, firstLetterUpper, genValue, getDescripts, getFieldType, getFkFieldType, getTitle, isSkipExportDefaults0 } from "./CSParseTool"
+import { convMemberName, convTupleArrayType, convTupleArrayTypeDefine, convVarName, firstLetterUpper, genValue, getCustomFieldTypeAnnotation, getDescripts, getFieldAnnotation, getFieldType, getFkFieldType, getTitle, isSkipExportDefaults0, useMMPNamespace } from "./CSParseTool"
 import * as fs from "fs-extra"
 
 export function export_stuff(paras: HandleSheetParams): string | null {
@@ -15,9 +15,10 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 		xxtea,
 		exportNamespace,
 		moreOptions,
+		allTags,
 	} = paras;
 
-	let isSkipExportDefaults = !!moreOptions?.SkipDefaults ?? false
+	let isSkipExportDefaults = !!(moreOptions?.SkipDefaults ?? false)
 	if (isSkipExportDefaults0) {
 		isSkipExportDefaults = true
 	}
@@ -27,9 +28,23 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 	let mapfield = fields.find(a => a.type == "key")//如果是map，则生成对应的map
 	let mapName = name + "Map"
 
+	let customFields: Field[] = []
+	for (let f2 of fields) {
+		customFields.push(f2)
+		let f3 = convTupleArrayType(f2)
+		if (f3 != undefined) {
+			customFields.push(f3)
+		}
+	}
+
+	let isMMPEnabled = allTags.indexOf('csharp:mmp') != -1
+	let mmpNamespace = isMMPEnabled ? useMMPNamespace : ""
+
 	let temp = `
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+${mmpNamespace}
 
 namespace ${exportNamespace}{
 [System.Serializable]
@@ -39,22 +54,22 @@ public partial class ${RowClass} {
 	{
 ${iff(!isSkipExportDefaults, () => `
 ${foreach(datas, data =>
-	`		new ${RowClass}(${st(() => fields.map((f, index) => genValue(data[index], f)).join(", "))}),`
-)}
+		`		new ${RowClass}(${st(() => customFields.map((f, index) => genValue(data[f.index], f)).join(", "))}),`
+	)}
 `)}
 	};
 
 	public ${RowClass}() { }
-	public ${RowClass}(${st(() => fields.map(f => `${getFieldType(f)} ${convVarName(f.name)}`).join(", "))})
+	public ${RowClass}(${st(() => customFields.map(f => `${getFieldType(f)} ${convVarName(f.name)}`).join(", "))})
 	{
-${foreach(fields, f =>
+${foreach(customFields, f =>
 		`		this.${convMemberName(f.name)} = ${convVarName(f.name)};`
 	)}
 	}
 
 	public virtual ${RowClass} MergeFrom(${RowClass} source)
 	{
-${foreach(fields, f =>
+${foreach(customFields, f =>
 		`		this.${convMemberName(f.name)} = source.${convMemberName(f.name)};`
 	)}
 		return this;
@@ -74,16 +89,18 @@ ${foreach(getDescripts(f), line =>
 		`	/// ${line}`
 	)}
 	/// </summary>
+	${getFieldAnnotation(f)}
 	public ${getFieldType(f)} ${convMemberName(f.name)};
 
 ${iff(f.rawType.startsWith("@"), () => `
 	/// <summary>
 ${foreach(getDescripts(f), line =>
-	`	/// ${line}`
-)}
+		`	/// ${line}`
+	)}
 	/// </summary>
-	${convTupleArrayType(f)}`)}`
-)}
+	${getCustomFieldTypeAnnotation(f)}
+	${convTupleArrayTypeDefine(f)}`)}`
+	)}
 
 	${cmm(/**生成get字段 */)}
 #region get字段
