@@ -150,8 +150,8 @@ namespace ${exportNamespace}
 				throw new System.Exception(tip);
 			}
 			var loadUrl = pathConverter == null ? LoadUrl : pathConverter(LoadUrl);
-			var configJson = System.IO.File.ReadAllText(loadUrl, System.Text.Encoding.UTF8);
-			if (configJson != null)
+			var configLiteral = System.IO.File.ReadAllText(loadUrl, System.Text.Encoding.UTF8);
+			if (configLiteral != null)
 			{
 				var obj = new TempA()
 				{
@@ -159,7 +159,7 @@ namespace ${exportNamespace}
 				};
 				try
 				{
-					// JsonUtility.FromJsonOverwrite("{\\"a\\":"+configJson+"}", obj);
+					// JsonUtility.FromJsonOverwrite("{\\"a\\":"+configLiteral+"}", obj);
 					ConfigAssetLoader.LoadConfigs(configLiteral, Configs);
 				}
 				catch(System.Exception ex)
