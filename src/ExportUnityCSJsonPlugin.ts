@@ -4,6 +4,7 @@ import * as fs from "fs-extra"
 import { GetUsingJsonToolNamespace, TryConvValue, convMemberName, genTupleArrayValue, isEnableMMP } from "./CSParseTool";
 
 var isSkipIndexLoader0 = process.argv.findIndex(v => v == "--SkipIndexLoader") >= 0
+var isWrapObject = process.argv.findIndex(v => v == "--WrapObject") >= 0
 
 let firstLetterUpper = makeFirstLetterUpper;
 export function exportUJson(paras: HandleSheetParams): string | null {
@@ -43,6 +44,10 @@ export function exportUJson(paras: HandleSheetParams): string | null {
 		// })
 		return newObj
 	}));
+
+	if(isWrapObject){
+		jsonString = `{"A":${jsonString}}`
+	}
 
 	return jsonString;
 
@@ -154,7 +159,8 @@ namespace ${exportNamespace}
 				};
 				try
 				{
-					JsonUtility.FromJsonOverwrite("{\\"a\\":"+configJson+"}", obj);
+					// JsonUtility.FromJsonOverwrite("{\\"a\\":"+configJson+"}", obj);
+					ConfigAssetLoader.LoadConfigs(configLiteral, Configs);
 				}
 				catch(System.Exception ex)
 				{

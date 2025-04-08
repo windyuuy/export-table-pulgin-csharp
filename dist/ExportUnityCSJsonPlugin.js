@@ -28,6 +28,7 @@ const export_table_lib_1 = require("export-table-lib");
 const fs = __importStar(require("fs-extra"));
 const CSParseTool_1 = require("./CSParseTool");
 var isSkipIndexLoader0 = process.argv.findIndex(v => v == "--SkipIndexLoader") >= 0;
+var isWrapObject = process.argv.findIndex(v => v == "--WrapObject") >= 0;
 let firstLetterUpper = export_table_lib_1.makeFirstLetterUpper;
 function exportUJson(paras) {
     let { datas, fields, name, objects, table, } = paras;
@@ -59,6 +60,9 @@ function exportUJson(paras) {
         // })
         return newObj;
     }));
+    if (isWrapObject) {
+        jsonString = `{"A":${jsonString}}`;
+    }
     return jsonString;
     // 	// !!!必须开头没有空格
     // 	let temp = `%YAML 1.1
@@ -155,7 +159,8 @@ namespace ${exportNamespace}
 				};
 				try
 				{
-					JsonUtility.FromJsonOverwrite("{\\"a\\":"+configJson+"}", obj);
+					// JsonUtility.FromJsonOverwrite("{\\"a\\":"+configJson+"}", obj);
+					ConfigAssetLoader.LoadConfigs(configLiteral, Configs);
 				}
 				catch(System.Exception ex)
 				{
