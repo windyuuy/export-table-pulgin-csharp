@@ -143,7 +143,7 @@ namespace ${exportNamespace}
 #if UNITY_EDITOR
 		public static void LoadInEditor(bool force = false, System.Func<string, string> pathConverter = null)
 		{
-			if (Application.isPlaying && (!force))
+			if ((!force) && UnityEditor.EditorApplication.isPlaying)
 			{
 				var tip = $"cannot load ${RowClass}[] with LoadInEditor at runtime";
 				Debug.LogError(tip);
