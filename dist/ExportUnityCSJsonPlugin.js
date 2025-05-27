@@ -115,28 +115,39 @@ namespace ${exportNamespace}
 		}
 
 		public const string LoadUrl = "Assets/Bundles/GameConfigs/Auto/${fullName}${fileExt}";
+		public static int LoadState = 0;
+		public static bool IsLoadedSuccessfully => LoadState == 4;
+		public static bool IsComplete => LoadState != 0;
 
 		public static async Task Load()
 		{
-			var loadUrl = LoadUrl;
-			var configLiteral = await ConfigAssetLoader.LoadAssetAsync(loadUrl);
-			if (configLiteral != null)
+			if (LoadState <= 0)
 			{
-				Debug.Log($"解析配表: {loadUrl}");
-				try
+				LoadState = 1;
+				var loadUrl = LoadUrl;
+				var configLiteral = await ConfigAssetLoader.LoadAssetAsync(loadUrl);
+				if (configLiteral != null)
 				{
-					// JsonUtility.FromJsonOverwrite("{\\"a\\":"+configLiteral+"}", obj);
-					ConfigAssetLoader.LoadConfigs(configLiteral, Configs);
+					Debug.Log($"解析配表: {loadUrl}");
+					try
+					{
+						// JsonUtility.FromJsonOverwrite("{\"a\":"+configLiteral+"}", obj);
+						LoadState = 2;
+						ConfigAssetLoader.LoadConfigs(configLiteral, Configs);
+						LoadState = 4;
+					}
+					catch (System.Exception ex)
+					{
+						LoadState = -2;
+						Debug.LogError($"解析配表失败: {loadUrl}");
+						throw ex;
+					}
 				}
-				catch(System.Exception ex)
+				else
 				{
-					Debug.LogError($"解析配表失败: {loadUrl}");
-                    throw ex;
+					LoadState = -1;
+					Debug.LogError($"配表资源缺失: {loadUrl}");
 				}
-			}
-			else
-			{
-				Debug.LogError($"配表资源缺失: {loadUrl}");
 			}
 		}
 
