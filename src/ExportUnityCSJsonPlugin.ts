@@ -1,7 +1,7 @@
 
 import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, OutFilePath, makeFirstLetterUpper } from "export-table-lib"
 import * as fs from "fs-extra"
-import { GetUsingJsonToolNamespace, TryConvValue, convMemberName, genTupleArrayValue, isEnableMMP } from "./CSParseTool";
+import { GetUsingJsonToolNamespace, TryConvValue, convMemberName, genTupleArrayValue, isEnableMMP, outputFileSync } from "./CSParseTool";
 
 var isSkipIndexLoader0 = process.argv.findIndex(v => v == "--SkipIndexLoader") >= 0
 var isWrapObject = process.argv.findIndex(v => v == "--WrapObject") >= 0
@@ -202,14 +202,14 @@ export class ExportUJsonPlugin extends PluginBase {
 			let content1 = exportUJsonLoader(paras)
 			if (content1 != null) {
 				let savePath = new OutFilePath(paras.outPath, fullName, "Loader.cs").fullPath
-				fs.outputFileSync(savePath, content1, "utf-8")
+				outputFileSync(savePath, content1, "utf-8")
 			}
 		}
 		{
 			let content2 = exportUJson(paras)
 			if (content2 != null) {
 				let savePath = new OutFilePath(paras.outPath, fullName, ".json").fullPath
-				fs.outputFileSync(savePath, content2, "utf-8")
+				outputFileSync(savePath, content2, "utf-8")
 			}
 			return content2
 		}
@@ -257,6 +257,6 @@ ${foreach(tables.sort((ta, tb) => ta.name.localeCompare(tb.name)), (table) => `
 }
 `
 		let savePath = paras.outPath + "/DefaultConfigLoader.cs";
-		fs.outputFileSync(savePath, temp, "utf-8");
+		outputFileSync(savePath, temp, "utf-8");
 	}
 }

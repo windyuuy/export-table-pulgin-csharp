@@ -1,5 +1,6 @@
 
 import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, iff, FieldType, makeFirstLetterLower, DataTable } from "export-table-lib"
+import * as fs from "fs-extra"
 
 export function TryConvValue(value: any, t: FieldType, f: Field): any {
 	try {
@@ -196,6 +197,9 @@ export function ConvValue2Literal(value: any, t: FieldType, f: Field): string {
 }
 
 export let isSkipExportDefaults0 = process.argv.findIndex(v => v == "--SkipDefaults") >= 0
+let withProtoIndex = process.argv.findIndex(v => v == "--WithProto")
+export let isOverwriteWithProto = withProtoIndex >= 0
+export let overwriteWithProtoPath = isOverwriteWithProto ? process.argv[withProtoIndex + 1] : ""
 
 export let firstLetterUpper = function (str: string) {
 	return str.charAt(0).toUpperCase() + str.slice(1);
@@ -407,3 +411,14 @@ export function GetUsingJsonToolNamespace() {
 
 export let isEnableMMP = process.argv.findIndex(v => v == "--EnableMMPB") >= 0
 export let useMMPNamespace = "using LoadTableMMP.Runtime;"
+
+export function outputFileSync(savePath: string, content1: any, options: BufferEncoding): void {
+	if (fs.existsSync(savePath)) {
+		let content = fs.readFileSync(savePath, options)
+		if (content != content1) {
+			fs.outputFileSync(savePath, content1, options)
+		}
+	} else {
+		fs.outputFileSync(savePath, content1, options)
+	}
+}

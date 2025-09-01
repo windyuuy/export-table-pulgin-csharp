@@ -121,14 +121,14 @@ class ExportLiteDBUJsonPlugin extends export_table_lib_1.PluginBase {
             let content1 = exportUJsonLoader(paras);
             if (content1 != null) {
                 let savePath = new export_table_lib_1.OutFilePath(paras.outPath, fullName, "Loader.cs").fullPath;
-                fs.outputFileSync(savePath, content1, "utf-8");
+                (0, CSParseTool_1.outputFileSync)(savePath, content1, "utf-8");
             }
         }
         {
             let content2 = (0, ExportUnityCSJsonPlugin_1.exportUJson)(paras);
             if (content2 != null) {
                 let savePath = new export_table_lib_1.OutFilePath(paras.outPath, fullName, ".json").fullPath;
-                fs.outputFileSync(savePath, content2, "utf-8");
+                (0, CSParseTool_1.outputFileSync)(savePath, content2, "utf-8");
             }
             return content2;
         }
@@ -160,7 +160,7 @@ ${(0, export_table_lib_1.foreach)(tables.sort((ta, tb) => ta.name.localeCompare(
 }
 `;
         let savePath = paras.outPath + "/DefaultConfigLoader.cs";
-        fs.outputFileSync(savePath, temp, "utf-8");
+        (0, CSParseTool_1.outputFileSync)(savePath, temp, "utf-8");
         // var options = new program.Command().option("--litedbpath <string>").parse(process.argv).allowUnknownOption(true).opts()
         // let litedbpath = options["litedbpath"]
         let litedbpathIndex = process.argv.indexOf("--litedbpath");

@@ -1,32 +1,8 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExportLiteDBCSPlugin = exports.export_stuff = void 0;
 const export_table_lib_1 = require("export-table-lib");
 const CSParseTool_1 = require("./CSParseTool");
-const fs = __importStar(require("fs-extra"));
 function export_stuff(paras) {
     let { datas, fields, inject, name, objects, packagename, tables, xxtea, exportNamespace, moreOptions, } = paras;
     let isSkipExportDefaults = !!(moreOptions?.SkipDefaults ?? false);
@@ -237,7 +213,7 @@ class ExportLiteDBCSPlugin extends export_table_lib_1.PluginBase {
         if (content != null) {
             var fullName = `${paras.table.workbookName}-${paras.name}`;
             let savePath = new export_table_lib_1.OutFilePath(paras.outPath, fullName, ".cs").fullPath;
-            fs.outputFileSync(savePath, content, "utf-8");
+            (0, CSParseTool_1.outputFileSync)(savePath, content, "utf-8");
         }
         return content;
     }

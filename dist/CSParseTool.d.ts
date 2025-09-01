@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { Field, FieldType, DataTable } from "export-table-lib";
 export declare function TryConvValue(value: any, t: FieldType, f: Field): any;
 export declare function ConvValue(value: any, t: FieldType, f: Field): any;
@@ -12,6 +13,8 @@ export declare function genTupleArrayValue(f: Field, content: string): {
 export declare function ToNewTupleStatement(obj: ValueTuple): string;
 export declare function ConvValue2Literal(value: any, t: FieldType, f: Field): string;
 export declare let isSkipExportDefaults0: boolean;
+export declare let isOverwriteWithProto: boolean;
+export declare let overwriteWithProtoPath: string;
 export declare let firstLetterUpper: (str: string) => string;
 export declare let firstLetterLower: (str: string) => string;
 export declare let convMemberName: (str: string) => string;
@@ -30,4 +33,5 @@ export declare const convTupleArrayTypeDefine: (f: Field) => string;
 export declare function GetUsingJsonToolNamespace(): string;
 export declare let isEnableMMP: boolean;
 export declare let useMMPNamespace: string;
+export declare function outputFileSync(savePath: string, content1: any, options: BufferEncoding): void;
 //# sourceMappingURL=CSParseTool.d.ts.map

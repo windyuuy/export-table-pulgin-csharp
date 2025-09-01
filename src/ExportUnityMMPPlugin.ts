@@ -1,7 +1,7 @@
 
 import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, OutFilePath, makeFirstLetterUpper, iff } from "export-table-lib"
 import * as fs from "fs-extra"
-import { convMemberName, convVarName, getFieldElementType, getFieldType, isTypeArray, useMMPNamespace } from "./CSParseTool";
+import { convMemberName, convVarName, getFieldElementType, getFieldType, isTypeArray, outputFileSync, useMMPNamespace } from "./CSParseTool";
 
 var isEnableMMPB = process.argv.findIndex(v => v == "--EnableMMPB") >= 0
 
@@ -120,7 +120,7 @@ export class ExportUnityMMPPlugin extends PluginBase {
 			let content1 = exportMMP(paras)
 			if (content1 != null) {
 				let savePath = new OutFilePath(paras.outPath, fullName, "MMP.cs").fullPath
-				fs.outputFileSync(savePath, content1, "utf-8")
+				outputFileSync(savePath, content1, "utf-8")
 			}
 		}
 	}

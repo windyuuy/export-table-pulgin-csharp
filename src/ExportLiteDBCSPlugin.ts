@@ -1,6 +1,6 @@
 
 import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, iff, FieldType, makeFirstLetterLower, DataTable, OutFilePath } from "export-table-lib"
-import { convMemberName, convTupleArrayTypeDefine, convVarName, firstLetterUpper, genValue, getDescripts, getFieldType, getFkFieldType, getTitle, isSkipExportDefaults0 } from "./CSParseTool"
+import { convMemberName, convTupleArrayTypeDefine, convVarName, firstLetterUpper, genValue, getDescripts, getFieldType, getFkFieldType, getTitle, isSkipExportDefaults0, outputFileSync } from "./CSParseTool"
 import * as fs from "fs-extra"
 
 export function export_stuff(paras: HandleSheetParams): string | null {
@@ -238,7 +238,7 @@ export class ExportLiteDBCSPlugin extends PluginBase {
 		if (content != null) {
 			var fullName = `${paras.table.workbookName}-${paras.name}`
 			let savePath = new OutFilePath(paras.outPath, fullName, ".cs").fullPath
-			fs.outputFileSync(savePath, content, "utf-8")
+			outputFileSync(savePath, content, "utf-8")
 		}
 		return content
 	}

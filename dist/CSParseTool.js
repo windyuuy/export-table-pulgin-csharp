@@ -1,7 +1,31 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.useMMPNamespace = exports.isEnableMMP = exports.GetUsingJsonToolNamespace = exports.convTupleArrayTypeDefine = exports.convTupleArrayType = exports.getDescripts = exports.getTitle = exports.genValue = exports.getFkFieldType = exports.getCustomFieldTypeAnnotation = exports.getFieldAnnotation = exports.isTypeArray = exports.getFieldType = exports.getFieldElementType = exports.convVarName = exports.convMemberName = exports.firstLetterLower = exports.firstLetterUpper = exports.isSkipExportDefaults0 = exports.ConvValue2Literal = exports.ToNewTupleStatement = exports.genTupleArrayValue = exports.ConvValue = exports.TryConvValue = void 0;
+exports.outputFileSync = exports.useMMPNamespace = exports.isEnableMMP = exports.GetUsingJsonToolNamespace = exports.convTupleArrayTypeDefine = exports.convTupleArrayType = exports.getDescripts = exports.getTitle = exports.genValue = exports.getFkFieldType = exports.getCustomFieldTypeAnnotation = exports.getFieldAnnotation = exports.isTypeArray = exports.getFieldType = exports.getFieldElementType = exports.convVarName = exports.convMemberName = exports.firstLetterLower = exports.firstLetterUpper = exports.overwriteWithProtoPath = exports.isOverwriteWithProto = exports.isSkipExportDefaults0 = exports.ConvValue2Literal = exports.ToNewTupleStatement = exports.genTupleArrayValue = exports.ConvValue = exports.TryConvValue = void 0;
 const export_table_lib_1 = require("export-table-lib");
+const fs = __importStar(require("fs-extra"));
 function TryConvValue(value, t, f) {
     try {
         return ConvValue(value, t, f);
@@ -222,6 +246,9 @@ function ConvValue2Literal(value, t, f) {
 }
 exports.ConvValue2Literal = ConvValue2Literal;
 exports.isSkipExportDefaults0 = process.argv.findIndex(v => v == "--SkipDefaults") >= 0;
+let withProtoIndex = process.argv.findIndex(v => v == "--WithProto");
+exports.isOverwriteWithProto = withProtoIndex >= 0;
+exports.overwriteWithProtoPath = exports.isOverwriteWithProto ? process.argv[withProtoIndex + 1] : "";
 let firstLetterUpper = function (str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 };
@@ -481,3 +508,15 @@ function GetUsingJsonToolNamespace() {
 exports.GetUsingJsonToolNamespace = GetUsingJsonToolNamespace;
 exports.isEnableMMP = process.argv.findIndex(v => v == "--EnableMMPB") >= 0;
 exports.useMMPNamespace = "using LoadTableMMP.Runtime;";
+function outputFileSync(savePath, content1, options) {
+    if (fs.existsSync(savePath)) {
+        let content = fs.readFileSync(savePath, options);
+        if (content != content1) {
+            fs.outputFileSync(savePath, content1, options);
+        }
+    }
+    else {
+        fs.outputFileSync(savePath, content1, options);
+    }
+}
+exports.outputFileSync = outputFileSync;

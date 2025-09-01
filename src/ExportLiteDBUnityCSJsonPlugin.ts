@@ -1,7 +1,7 @@
 
 import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, OutFilePath, makeFirstLetterUpper } from "export-table-lib"
 import * as fs from "fs-extra"
-import { GetUsingJsonToolNamespace, TryConvValue, convMemberName, firstLetterUpper } from "./CSParseTool";
+import { GetUsingJsonToolNamespace, TryConvValue, convMemberName, firstLetterUpper, outputFileSync } from "./CSParseTool";
 import path from "path";
 import * as cp from "child_process"
 import { exportUJson } from "./ExportUnityCSJsonPlugin";
@@ -105,14 +105,14 @@ export class ExportLiteDBUJsonPlugin extends PluginBase {
 			let content1 = exportUJsonLoader(paras)
 			if (content1 != null) {
 				let savePath = new OutFilePath(paras.outPath, fullName, "Loader.cs").fullPath
-				fs.outputFileSync(savePath, content1, "utf-8")
+				outputFileSync(savePath, content1, "utf-8")
 			}
 		}
 		{
 			let content2 = exportUJson(paras)
 			if (content2 != null) {
 				let savePath = new OutFilePath(paras.outPath, fullName, ".json").fullPath
-				fs.outputFileSync(savePath, content2, "utf-8")
+				outputFileSync(savePath, content2, "utf-8")
 			}
 
 			return content2
@@ -152,7 +152,7 @@ ${foreach(tables.sort((ta, tb) => ta.name.localeCompare(tb.name)), (table) => `
 }
 `
 		let savePath = paras.outPath + "/DefaultConfigLoader.cs";
-		fs.outputFileSync(savePath, temp, "utf-8");
+		outputFileSync(savePath, temp, "utf-8");
 
 		// var options = new program.Command().option("--litedbpath <string>").parse(process.argv).allowUnknownOption(true).opts()
 		// let litedbpath = options["litedbpath"]

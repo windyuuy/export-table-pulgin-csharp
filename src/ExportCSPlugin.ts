@@ -1,7 +1,9 @@
 
 import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, iff, FieldType, makeFirstLetterLower, DataTable } from "export-table-lib"
-import { convMemberName, convTupleArrayType, convTupleArrayTypeDefine, convVarName, firstLetterUpper, genValue, getCustomFieldTypeAnnotation, getDescripts, getFieldAnnotation, getFieldType, getFkFieldType, getTitle, isSkipExportDefaults0, useMMPNamespace } from "./CSParseTool"
+import { convMemberName, convTupleArrayType, convTupleArrayTypeDefine, convVarName, firstLetterUpper, genValue, getCustomFieldTypeAnnotation, getDescripts, getFieldAnnotation, getFieldType, getFkFieldType, getTitle, isOverwriteWithProto, isSkipExportDefaults0, outputFileSync, overwriteWithProtoPath, useMMPNamespace } from './CSParseTool';
 import * as fs from "fs-extra"
+import { CSProtoParser } from "./CSProtoParser";
+let protoParser = new CSProtoParser()
 
 export function export_stuff(paras: HandleSheetParams): string | null {
 	let {
@@ -12,6 +14,7 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 		objects,
 		packagename,
 		tables,
+		table: { nameOrigin, },
 		xxtea,
 		exportNamespace,
 		moreOptions,
@@ -37,18 +40,52 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 		}
 	}
 
+
+	let isValidField: (f: Field) => boolean
+	let getFieldType2: (f: Field) => string
+	let classNameOrigin = firstLetterUpper(nameOrigin)
+	if (isOverwriteWithProto) {
+		let classInfo = protoParser.getClassInfo(classNameOrigin)
+		if (classInfo != null) {
+			for (let f of classInfo.fields) {
+				console.log(`${f.csName}`)
+			}
+		}
+		isValidField = (f: Field) => {
+			let fieldInfo = classInfo?.getFieldInfo(f.name)
+			console.log(`validf: ${f.name}, ${fieldInfo}`)
+			return fieldInfo == null
+		}
+		getFieldType2 = (f: Field) => {
+			let fieldInfo = classInfo?.getFieldInfo(f.name)
+			if (fieldInfo != null) {
+				let fieldName = fieldInfo.getFieldType()
+				return fieldName
+			} else {
+				return getFieldType(f);
+			}
+		}
+	} else {
+		isValidField = (f: Field) => true;
+		getFieldType2 = getFieldType
+	}
+	let validFields = fields.filter(f => isValidField(f))
+	let mmpPrefix = isOverwriteWithProto ? "[MemoryPackable]" : ""
+	let extendClass = isOverwriteWithProto ? ` : ${classNameOrigin}` : ""
+	let usingProtoNamespace = isOverwriteWithProto ? "\nusing DXTS.BattleProto;" : ""
+
 	let isMMPEnabled = allTags.indexOf('csharp:mmp') != -1
 	let mmpNamespace = isMMPEnabled ? useMMPNamespace : ""
 
 	let temp = `
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;${usingProtoNamespace}
 ${mmpNamespace}
 
 namespace ${exportNamespace}{
-[System.Serializable]
-public partial class ${RowClass} {
+[System.Serializable]${mmpPrefix}
+public partial class ${RowClass}${extendClass} {
 
 	public static List<${RowClass}> Configs = new List<${RowClass}>()
 	{
@@ -60,7 +97,7 @@ ${foreach(datas, data =>
 	};
 
 	public ${RowClass}() { }
-	public ${RowClass}(${st(() => customFields.map(f => `${getFieldType(f)} ${convVarName(f.name)}`).join(", "))})
+	public ${RowClass}(${st(() => customFields.map(f => `${getFieldType2(f)} ${convVarName(f.name)}`).join(", "))})
 	{
 ${foreach(customFields, f =>
 		`		this.${convMemberName(f.name)} = ${convVarName(f.name)};`
@@ -83,14 +120,14 @@ ${foreach(customFields, f =>
 	}
 
 	${cmm(/**生成字段 */)}
-${foreach(fields, f => `
+${foreach(validFields, f => `
 	/// <summary>
 ${foreach(getDescripts(f), line =>
 		`	/// ${line}`
 	)}
 	/// </summary>
 	${getFieldAnnotation(f)}
-	public ${getFieldType(f)} ${convMemberName(f.name)};
+	public ${getFieldType2(f)} ${convMemberName(f.name)};
 
 ${iff(f.rawType.startsWith("@"), () => `
 	/// <summary>
@@ -106,7 +143,7 @@ ${foreach(getDescripts(f), line =>
 #region get字段
 ${foreach(fields, f => {
 		if (f.nameOrigin != f.name) {
-			return `	public ${getFieldType(f)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`
+			return `	public ${getFieldType2(f)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`
 		} else {
 			return ""
 		}
@@ -120,7 +157,7 @@ ${foreach(fields, f => {
 			let memberName = convMemberName(f.name);
 			let paraName = convVarName(memberName);
 			let tempDictByMemberName = `TempDictBy${memberName}`;
-			let memberType = getFieldType(f);
+			let memberType = getFieldType2(f);
 			return `
 		protected static Dictionary<${memberType}, ${RowClass}> ${tempDictByMemberName};
 		public static ${RowClass} GetConfigBy${memberName}(${memberType} ${paraName})
@@ -147,7 +184,7 @@ ${foreach(fields, f => {
 			let memberName = convMemberName(f.name);
 			let paraName = convVarName(memberName);
 			let tempRecordsDictByMemberName = `TempRecordsDictBy${memberName}`;
-			let memberType = getFieldType(f);
+			let memberType = getFieldType2(f);
 			return `
 		protected static Dictionary<${memberType}, ${RowClass}[]> ${tempRecordsDictByMemberName};
 		public static ${RowClass}[] GetConfigsBy${memberName}(${memberType} ${paraName})
@@ -243,10 +280,14 @@ export class ExportPlugin extends PluginBase {
 	name = "csharp"
 	tags: string[] = ["cs"]
 
+	handleBatch(paras: HandleBatchParams): void {
+		console.log(`try parse proto: ${overwriteWithProtoPath}`)
+		protoParser.parseProtoFile(overwriteWithProtoPath)
+	}
 	handleSheet(paras: HandleSheetParams) {
 		let content = export_stuff(paras)
 		if (content != null) {
-			fs.outputFileSync(paras.outFilePath.fullPath, content, "utf-8")
+			outputFileSync(paras.outFilePath.fullPath, content, "utf-8")
 		}
 		return content
 	}
