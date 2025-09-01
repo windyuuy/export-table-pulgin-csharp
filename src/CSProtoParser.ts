@@ -22,14 +22,15 @@ export class FieldInfo {
             .map(t => t.slice(0, 1).toUpperCase() + t.slice(1))
             .join(""))
     }
-    setType(t: string) {
+    setType(t: string, isArray: boolean) {
+        this.isArray = isArray
         this.type = t;
 
         let internalType = fieldTypeMap[this.type]
         if (internalType != undefined) {
-            this.csType = internalType
+            this.csType = this.isArray ? `${internalType}[]` : internalType
         } else {
-            this.csType = t
+            this.csType = this.isArray ? `${t}[]` : t
         }
     }
 
@@ -53,8 +54,10 @@ export class CSProtoParser {
     typeMap: Map<string, ClassInfo> = new Map();
     parseProtoFile(filePath: string) {
         let content = fs.readFileSync(filePath, "utf-8");
+        let classMeta = new ClassInfo()
         let curClass: ClassInfo | null = null
         let codeLines = content.split("\n")
+        let classMapperRegex = /\/\/\!Mapper\((\w+)\)/
         let messageRegex = /message (\w+)/
         let enumRegex = /enum (\w+)/
         let structEndRegex = /^\}/
@@ -66,14 +69,24 @@ export class CSProtoParser {
             if (!isInClass) {
                 // check enter class
                 while (true) {
+                    let mMapper = line.match(classMapperRegex)
+                    if (mMapper) {
+                        let mapName = mMapper[1]
+                        classMeta.name = mapName
+                        console.log(`mapper: ${mapName}`)
+                    }
                     let m1 = line.match(messageRegex)
                     if (m1) {
                         let className = m1[1]
                         curClass = new ClassInfo()
-                        console.log(`find class: ${className}`)
+                        // console.log(`find class: ${className}`)
                         curClass.name = className
                         curClass.type = "class"
-                        this.typeMap.set(className, curClass)
+                        if (classMeta.name != "") {
+                            this.typeMap.set(classMeta.name, curClass)
+                        } else {
+                            this.typeMap.set(className, curClass)
+                        }
                         isInClass = true
                         break
                     }
@@ -83,7 +96,11 @@ export class CSProtoParser {
                         curClass = new ClassInfo()
                         curClass.name = enumName
                         curClass.type = "enum"
-                        this.typeMap.set(enumName, curClass)
+                        if (classMeta.name != "") {
+                            this.typeMap.set(classMeta.name, curClass)
+                        } else {
+                            this.typeMap.set(enumName, curClass)
+                        }
                         isInClass = true
                         break
                     }
@@ -94,6 +111,7 @@ export class CSProtoParser {
                 let m3 = line.match(structEndRegex)
                 if (m3) {
                     curClass = null
+                    classMeta.name = ""
                     isInClass = false;
                 } else {
                     // parse class fields
@@ -104,10 +122,9 @@ export class CSProtoParser {
                         let fieldName = mField[3]
                         let field = new FieldInfo()
                         field.setName(fieldName)
-                        field.setType(fieldType)
-                        field.isArray = isArray
+                        field.setType(fieldType, isArray)
                         curClass!.fields.push(field)
-                        console.log(`find field: ${field.csName}, ${field.csType}, ${curClass!.fields.length}`)
+                        // console.log(`find field: ${field.csName}, ${field.csType}, ${field.isArray}`)
                     }
                 }
             }

@@ -5,7 +5,7 @@ export declare class FieldInfo {
     csName: string;
     csType: string;
     setName(n: string): void;
-    setType(t: string): void;
+    setType(t: string, isArray: boolean): void;
     getFieldType(): string;
 }
 export declare class ClassInfo {

@@ -140,13 +140,8 @@ namespace ${exportNamespace}
 			var configLiteral = System.IO.File.ReadAllText(loadUrl, System.Text.Encoding.UTF8);
 			if (configLiteral != null)
 			{
-				var obj = new TempA()
-				{
-					a=${RowClass}.Configs,
-				};
 				try
 				{
-					// JsonUtility.FromJsonOverwrite("{\\"a\\":"+configLiteral+"}", obj);
 					ConfigAssetLoader.LoadConfigs(configLiteral, Configs);
 				}
 				catch(System.Exception ex)
@@ -158,6 +153,45 @@ namespace ${exportNamespace}
 			else
 			{
 				Debug.LogError($"配表资源缺失: {loadUrl}");
+			}
+		}
+			
+		public static void SaveInEditor(bool force = false, System.Func<string, string> pathConverter = null)
+		{
+			if ((!force) && UnityEditor.EditorApplication.isPlaying)
+			{
+				var tip = $"cannot load ${RowClass}[] with LoadInEditor at runtime";
+				Debug.LogError(tip);
+				throw new System.Exception(tip);
+			}
+
+			var loadUrl = pathConverter == null ? LoadUrl : pathConverter(LoadUrl);
+			string configLiteral = null;
+			try
+			{
+				configLiteral = ConfigAssetLoader.ToLiteral(Configs);
+			}
+			catch (System.Exception exception)
+			{
+				Debug.LogError($"json序列化失败: {loadUrl}");
+				throw exception;
+			}
+
+			if (configLiteral != null)
+			{
+				try
+				{
+					var content0 = System.IO.File.ReadAllText(loadUrl, System.Text.Encoding.UTF8);
+					if (content0 != configLiteral)
+					{
+						System.IO.File.WriteAllText(loadUrl, configLiteral, System.Text.Encoding.UTF8);
+					}
+				}
+				catch (System.Exception exception)
+				{
+					Debug.LogError($"写配置文件失败: {loadUrl}");
+					throw exception;
+				}
 			}
 		}
 #endif

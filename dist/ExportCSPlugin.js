@@ -25,17 +25,22 @@ function export_stuff(paras) {
     }
     let isValidField;
     let getFieldType2;
+    let extendClass = "";
+    let usingProtoNamespace = "";
     let classNameOrigin = (0, CSParseTool_1.firstLetterUpper)(nameOrigin);
     if (CSParseTool_1.isOverwriteWithProto) {
+        console.log(`map class: ${classNameOrigin}`);
         let classInfo = protoParser.getClassInfo(classNameOrigin);
         if (classInfo != null) {
-            for (let f of classInfo.fields) {
-                console.log(`${f.csName}`);
-            }
+            extendClass = ` : ${classInfo.name}`;
+            usingProtoNamespace = "\nusing DXTS.BattleProto;";
+            // for (let f of classInfo.fields) {
+            // 	console.log(`${f.csName}`)
+            // }
         }
         isValidField = (f) => {
             let fieldInfo = classInfo?.getFieldInfo(f.name);
-            console.log(`validf: ${f.name}, ${fieldInfo}`);
+            // console.log(`validf: ${f.name}, ${fieldInfo}`)
             return fieldInfo == null;
         };
         getFieldType2 = (f) => {
@@ -55,8 +60,6 @@ function export_stuff(paras) {
     }
     let validFields = fields.filter(f => isValidField(f));
     let mmpPrefix = CSParseTool_1.isOverwriteWithProto ? "[MemoryPackable]" : "";
-    let extendClass = CSParseTool_1.isOverwriteWithProto ? ` : ${classNameOrigin}` : "";
-    let usingProtoNamespace = CSParseTool_1.isOverwriteWithProto ? "\nusing DXTS.BattleProto;" : "";
     let isMMPEnabled = allTags.indexOf('csharp:mmp') != -1;
     let mmpNamespace = isMMPEnabled ? CSParseTool_1.useMMPNamespace : "";
     let temp = `
@@ -66,7 +69,7 @@ using System.Runtime.InteropServices;${usingProtoNamespace}
 ${mmpNamespace}
 
 namespace ${exportNamespace}{
-[System.Serializable]${mmpPrefix}
+[System.Serializable]
 public partial class ${RowClass}${extendClass} {
 
 	public static List<${RowClass}> Configs = new List<${RowClass}>()
