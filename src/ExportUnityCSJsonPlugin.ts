@@ -164,6 +164,7 @@ namespace ${exportNamespace}
 			var configLiteral = System.IO.File.ReadAllText(loadUrl, System.Text.Encoding.UTF8);
 			if (configLiteral != null)
 			{
+				Configs.Clear();
 				try
 				{
 					ConfigAssetLoader.LoadConfigs(configLiteral, Configs);
