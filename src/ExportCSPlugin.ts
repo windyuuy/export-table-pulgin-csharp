@@ -99,6 +99,8 @@ ${foreach(datas, data =>
 `)}
 	};
 
+	public static ${RowClass} Head => Configs.Count > 0 ? Configs[0] : null;
+
 	public ${RowClass}() { }
 	public ${RowClass}(${st(() => customFields.map(f => `${getFieldType2(f)} ${convVarName(f.name)}`).join(", "))})
 	{
