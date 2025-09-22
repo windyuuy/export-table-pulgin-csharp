@@ -79,7 +79,8 @@ ${(0, export_table_lib_1.foreach)(datas, data => `		new ${RowClass}(${(0, export
 `)}
 	};
 
-	public static ${RowClass} Head => Configs.Count > 0 ? Configs[0] : null;
+	private static ${RowClass} _head;
+	public static ${RowClass} Head => _head ??= Configs.Count > 0 ? Configs[0] : null;
 
 	public ${RowClass}() { }
 	public ${RowClass}(${(0, export_table_lib_1.st)(() => customFields.map(f => `${getFieldType2(f)} ${(0, CSParseTool_1.convVarName)(f.name)}`).join(", "))})
