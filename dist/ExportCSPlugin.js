@@ -154,7 +154,7 @@ ${(0, export_table_lib_1.foreach)(fields, f => {
 #if UNITY_EDITOR
 			if (${tempDictByMemberName}.Count != Configs.Count)
 			{
-				UnityEngine.Debug.LogError($"配表数据不一致(ConfigsUnmatched): {${tempDictByMemberName}.Count}!={Configs.Count}");
+				UnityEngine.Debug.LogError($"配表数据不一致(ConfigsUnmatched)<${RowClass}.${memberName}>: {${tempDictByMemberName}.Count}!={Configs.Count}");
 			}
 #endif
 			return ${tempDictByMemberName}.GetValueOrDefault(${paraName});
