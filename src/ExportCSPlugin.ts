@@ -174,7 +174,10 @@ ${foreach(fields, f => {
 				for(var i = 0; i < Configs.Count; i++)
 				{
 					var c = Configs[i];
-					${tempDictByMemberName}.Add(c.${memberName}, c);
+					if(!${tempDictByMemberName}.TryAdd(c.${memberName}, c))
+					{
+						UnityEngine.Debug.LogError($"重复的配表字段唯一值<${RowClass}.${memberName}>: {c.${memberName}}");
+					}
 				}
 			}
 #if UNITY_EDITOR
@@ -206,7 +209,10 @@ ${foreach(fields, f => {
 					${tempRecordsDictByMemberName} = new Dictionary<${memberType}, ${RowClass}[]>(Configs.Count);
 				}
 				var records = Configs.Where(c => c.${memberName} == ${paraName}).ToArray();
-				${tempRecordsDictByMemberName}.Add(${paraName}, records);
+				if(!${tempRecordsDictByMemberName}.TryAdd(${paraName}, records))
+				{
+					UnityEngine.Debug.LogError($"重复的配表多对一字段值<${RowClass}.${paraName}>: {${paraName}}");
+				}
 				return records;
 			}
 		}
