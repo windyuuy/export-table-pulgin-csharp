@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ExportLiteDBCSPlugin = exports.export_stuff = void 0;
+exports.ExportLiteDBCSPlugin = void 0;
+exports.export_stuff = export_stuff;
 const export_table_lib_1 = require("export-table-lib");
 const CSParseTool_1 = require("./CSParseTool");
 function export_stuff(paras) {
@@ -204,7 +205,6 @@ ${(0, export_table_lib_1.iff)(f.type == "fk[]", () => `
 `;
     return temp;
 }
-exports.export_stuff = export_stuff;
 class ExportLiteDBCSPlugin extends export_table_lib_1.PluginBase {
     name = "litedbcs";
     tags = ["litedbcs"];

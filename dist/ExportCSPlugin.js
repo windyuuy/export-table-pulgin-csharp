@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ExportPlugin = exports.export_stuff = void 0;
+exports.ExportPlugin = void 0;
+exports.export_stuff = export_stuff;
 const export_table_lib_1 = require("export-table-lib");
 const CSParseTool_1 = require("./CSParseTool");
 const CSProtoParser_1 = require("./CSProtoParser");
@@ -62,6 +63,7 @@ function export_stuff(paras) {
     let mmpPrefix = CSParseTool_1.isOverwriteWithProto ? "[MemoryPackable]" : "";
     let isMMPEnabled = allTags.indexOf('csharp:mmp') != -1;
     let mmpNamespace = isMMPEnabled ? CSParseTool_1.useMMPNamespace : "";
+    let translateFields = fields.filter(f => f.translate);
     let temp = `
 using System.Collections.Generic;
 using System.Linq;
@@ -69,6 +71,9 @@ using System.Runtime.InteropServices;${usingProtoNamespace}
 ${mmpNamespace}
 
 namespace ${exportNamespace}{
+
+// NeedTranslateFields: [${translateFields.map(f => f.name).join(", ")}]
+
 [System.Serializable]
 public partial class ${RowClass}${extendClass} {
 
@@ -257,13 +262,14 @@ ${(0, export_table_lib_1.iff)(f.type == "fk[]", () => `
 `;
     return temp;
 }
-exports.export_stuff = export_stuff;
 class ExportPlugin extends export_table_lib_1.PluginBase {
     name = "csharp";
     tags = ["cs"];
     handleBatch(paras) {
-        console.log(`try parse proto: ${CSParseTool_1.overwriteWithProtoPath}`);
-        protoParser.parseProtoFile(CSParseTool_1.overwriteWithProtoPath);
+        if (CSParseTool_1.overwriteWithProtoPath != null && CSParseTool_1.overwriteWithProtoPath != "") {
+            console.log(`try parse proto: ${CSParseTool_1.overwriteWithProtoPath}`);
+            protoParser.parseProtoFile(CSParseTool_1.overwriteWithProtoPath);
+        }
     }
     handleSheet(paras) {
         let content = export_stuff(paras);

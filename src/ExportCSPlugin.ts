@@ -80,6 +80,8 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 	let isMMPEnabled = allTags.indexOf('csharp:mmp') != -1
 	let mmpNamespace = isMMPEnabled ? useMMPNamespace : ""
 
+	let translateFields = fields.filter(f => f.translate)
+
 	let temp = `
 using System.Collections.Generic;
 using System.Linq;
@@ -87,6 +89,9 @@ using System.Runtime.InteropServices;${usingProtoNamespace}
 ${mmpNamespace}
 
 namespace ${exportNamespace}{
+
+// NeedTranslateFields: [${translateFields.map(f => f.name).join(", ")}]
+
 [System.Serializable]
 public partial class ${RowClass}${extendClass} {
 
@@ -293,8 +298,10 @@ export class ExportPlugin extends PluginBase {
 	tags: string[] = ["cs"]
 
 	handleBatch(paras: HandleBatchParams): void {
-		console.log(`try parse proto: ${overwriteWithProtoPath}`)
-		protoParser.parseProtoFile(overwriteWithProtoPath)
+		if (overwriteWithProtoPath != null && overwriteWithProtoPath != "") {
+			console.log(`try parse proto: ${overwriteWithProtoPath}`)
+			protoParser.parseProtoFile(overwriteWithProtoPath)
+		}
 	}
 	handleSheet(paras: HandleSheetParams) {
 		let content = export_stuff(paras)

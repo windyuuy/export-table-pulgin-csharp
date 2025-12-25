@@ -15,18 +15,31 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ExportLiteDBUJsonPlugin = exports.ConvJson2LiteDB = exports.RemoveJsonFiles = exports.exportUJsonLoader = void 0;
+exports.ExportLiteDBUJsonPlugin = void 0;
+exports.exportUJsonLoader = exportUJsonLoader;
+exports.RemoveJsonFiles = RemoveJsonFiles;
+exports.ConvJson2LiteDB = ConvJson2LiteDB;
 const export_table_lib_1 = require("export-table-lib");
 const fs = __importStar(require("fs-extra"));
 const CSParseTool_1 = require("./CSParseTool");
@@ -74,7 +87,6 @@ namespace ${exportNamespace}
 `;
     return temp;
 }
-exports.exportUJsonLoader = exportUJsonLoader;
 async function RemoveJsonFiles(savePaths2) {
     let deleteTasks = savePaths2.map(async (savePath2) => {
         console.log(`delete file: ${savePath2}`);
@@ -90,7 +102,6 @@ async function RemoveJsonFiles(savePaths2) {
     });
     await Promise.all(deleteTasks);
 }
-exports.RemoveJsonFiles = RemoveJsonFiles;
 async function ConvJson2LiteDB(litedbpath, savePaths) {
     if (litedbpath != null && litedbpath != "") {
         let modulePath = require.resolve(".");
@@ -111,7 +122,6 @@ async function ConvJson2LiteDB(litedbpath, savePaths) {
         console.log(`no litedbpath given, skip conv database`);
     }
 }
-exports.ConvJson2LiteDB = ConvJson2LiteDB;
 class ExportLiteDBUJsonPlugin extends export_table_lib_1.PluginBase {
     name = "litedbujson";
     tags = ["litedbujson"];

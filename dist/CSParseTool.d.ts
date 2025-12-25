@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { Field, FieldType, DataTable } from "export-table-lib";
 export declare function TryConvValue(value: any, t: FieldType, f: Field): any;
 export declare function ConvValue(value: any, t: FieldType, f: Field): any;

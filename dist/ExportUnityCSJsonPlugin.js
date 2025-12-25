@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ExportUJsonPlugin = exports.exportUJsonLoader = exports.exportUJson = void 0;
+exports.ExportUJsonPlugin = void 0;
+exports.exportUJson = exportUJson;
+exports.exportUJsonLoader = exportUJsonLoader;
 const export_table_lib_1 = require("export-table-lib");
 const CSParseTool_1 = require("./CSParseTool");
 var isSkipIndexLoader0 = process.argv.findIndex(v => v == "--SkipIndexLoader") >= 0;
@@ -59,7 +61,6 @@ function exportUJson(paras) {
     // `
     // 	return temp
 }
-exports.exportUJson = exportUJson;
 function exportUJsonLoader(paras) {
     let { datas, fields, name, objects, table, exportNamespace, allTags, } = paras;
     let useJsonToolNamesapce = (0, CSParseTool_1.GetUsingJsonToolNamespace)();
@@ -201,7 +202,6 @@ namespace ${exportNamespace}
 `;
     return temp;
 }
-exports.exportUJsonLoader = exportUJsonLoader;
 class ExportUJsonPlugin extends export_table_lib_1.PluginBase {
     name = "ujson";
     tags = ["ujson"];

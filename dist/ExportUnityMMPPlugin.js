@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ExportUnityMMPPlugin = exports.exportMMP = void 0;
+exports.ExportUnityMMPPlugin = void 0;
+exports.exportMMP = exportMMP;
 const export_table_lib_1 = require("export-table-lib");
 const CSParseTool_1 = require("./CSParseTool");
 var isEnableMMPB = process.argv.findIndex(v => v == "--EnableMMPB") >= 0;
@@ -98,7 +99,6 @@ ${(0, export_table_lib_1.iff)(f.rawType.startsWith("@") && f.rawType.endsWith("[
 `;
     return temp;
 }
-exports.exportMMP = exportMMP;
 class ExportUnityMMPPlugin extends export_table_lib_1.PluginBase {
     name = "mmp";
     tags = ["mmp"];
