@@ -90,7 +90,7 @@ ${mmpNamespace}
 
 namespace ${exportNamespace}{
 ${iff(translateFields.length > 0, () => `
-// NeedTranslateFields: [${translateFields.map(f => f.name).join(", ")}]
+// NeedTranslateFields: [${translateFields.map(f => convMemberName(f.name)).join(", ")}]
 `)}
 [System.Serializable]
 public partial class ${RowClass}${extendClass} {

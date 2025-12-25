@@ -72,7 +72,7 @@ ${mmpNamespace}
 
 namespace ${exportNamespace}{
 ${(0, export_table_lib_1.iff)(translateFields.length > 0, () => `
-// NeedTranslateFields: [${translateFields.map(f => f.name).join(", ")}]
+// NeedTranslateFields: [${translateFields.map(f => (0, CSParseTool_1.convMemberName)(f.name)).join(", ")}]
 `)}
 [System.Serializable]
 public partial class ${RowClass}${extendClass} {
