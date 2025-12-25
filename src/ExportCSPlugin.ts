@@ -89,9 +89,9 @@ using System.Runtime.InteropServices;${usingProtoNamespace}
 ${mmpNamespace}
 
 namespace ${exportNamespace}{
-
+${iff(translateFields.length > 0, () => `
 // NeedTranslateFields: [${translateFields.map(f => f.name).join(", ")}]
-
+`)}
 [System.Serializable]
 public partial class ${RowClass}${extendClass} {
 
