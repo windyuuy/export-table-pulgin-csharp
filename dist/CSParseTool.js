@@ -255,6 +255,7 @@ function ConvValue2Literal(value, t, f) {
     else if (t == "key") {
         return `${value}`;
     }
+    console.error(`invalid type ${f.name}`, f);
     throw new Error(`invalid type ${f.name}:<${f.rawType} => unkown>`);
 }
 exports.isSkipExportDefaults0 = process.argv.findIndex(v => v == "--SkipDefaults") >= 0;

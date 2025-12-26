@@ -1,5 +1,5 @@
 
-import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, iff, FieldType, makeFirstLetterLower, DataTable } from "export-table-lib"
+import { cmm, HandleSheetParams, Field, foreach, IPlugin, st, PluginBase, HandleBatchParams, iff, FieldType, makeFirstLetterLower, DataTable, NoteType } from "export-table-lib"
 import { convMemberName, convTupleArrayType, convTupleArrayTypeDefine, convVarName, firstLetterUpper, genValue, getCustomFieldTypeAnnotation, getDescripts, getFieldAnnotation, getFieldType, getFkFieldType, getTitle, isOverwriteWithProto, isSkipExportDefaults0, outputFileSync, overwriteWithProtoPath, useMMPNamespace } from './CSParseTool';
 import * as fs from "fs-extra"
 import { CSProtoParser } from "./CSProtoParser";
@@ -31,18 +31,11 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 	let mapfield = fields.find(a => a.type == "key")//如果是map，则生成对应的map
 	let mapName = name + "Map"
 
-	let customFields: Field[] = []
-	for (let f2 of fields) {
-		customFields.push(f2)
-		let f3 = convTupleArrayType(f2)
-		if (f3 != undefined) {
-			customFields.push(f3)
-		}
-	}
-
-
 	let isValidField: (f: Field) => boolean
 	let getFieldType2: (f: Field) => string
+	function filterNote(f: Field) {
+		return f.note == NoteType.None
+	}
 	let extendClass = ""
 	let usingProtoNamespace = ""
 	let classNameOrigin = firstLetterUpper(nameOrigin)
@@ -57,9 +50,13 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 			// }
 		}
 		isValidField = (f: Field) => {
-			let fieldInfo = classInfo?.getFieldInfo(f.name)
-			// console.log(`validf: ${f.name}, ${fieldInfo}`)
-			return fieldInfo == null
+			if (filterNote(f)) {
+				let fieldInfo = classInfo?.getFieldInfo(f.name)
+				// console.log(`validf: ${f.name}, ${fieldInfo}`)
+				return fieldInfo == null
+			} else {
+				return false
+			}
 		}
 		getFieldType2 = (f: Field) => {
 			let fieldInfo = classInfo?.getFieldInfo(f.name)
@@ -71,10 +68,21 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 			}
 		}
 	} else {
-		isValidField = (f: Field) => true;
+		isValidField = (f: Field) => filterNote(f);
 		getFieldType2 = getFieldType
 	}
 	let validFields = fields.filter(f => isValidField(f))
+	
+	let customFields: Field[] = []
+	for (let f2 of validFields) {
+		customFields.push(f2)
+		let f3 = convTupleArrayType(f2)
+		if (f3 != undefined) {
+			customFields.push(f3)
+		}
+	}
+
+
 	let mmpPrefix = isOverwriteWithProto ? "[MemoryPackable]" : ""
 
 	let isMMPEnabled = allTags.indexOf('csharp:mmp') != -1
@@ -152,7 +160,7 @@ ${foreach(getDescripts(f), line =>
 
 	${cmm(/**生成get字段 */)}
 #region get字段
-${foreach(fields, f => {
+${foreach(validFields, f => {
 		if (f.nameOrigin != f.name) {
 			return `	public ${getFieldType2(f)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`
 		} else {
@@ -163,7 +171,7 @@ ${foreach(fields, f => {
 #endregion
 
 #region uid map
-${foreach(fields, f => {
+${foreach(validFields, f => {
 		if (f.isUnique) {
 			let memberName = convMemberName(f.name);
 			let paraName = convVarName(memberName);
@@ -231,7 +239,7 @@ ${foreach(fields, f => {
 #endregion uid map
 
 #region 生成fk.get/set
-${foreach(fields, f => `
+${foreach(validFields, f => `
 ${iff(f.type == "fk", () => `
 ${iff(getFkFieldType(tables, f).toLowerCase() != "uid", () => `
 	protected ${convMemberName(f.fkTableName!)}[] _fk${convMemberName(f.name)}=null;

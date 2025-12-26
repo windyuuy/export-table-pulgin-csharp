@@ -16,16 +16,11 @@ function export_stuff(paras) {
     let initFunc = name + "Init";
     let mapfield = fields.find(a => a.type == "key"); //如果是map，则生成对应的map
     let mapName = name + "Map";
-    let customFields = [];
-    for (let f2 of fields) {
-        customFields.push(f2);
-        let f3 = (0, CSParseTool_1.convTupleArrayType)(f2);
-        if (f3 != undefined) {
-            customFields.push(f3);
-        }
-    }
     let isValidField;
     let getFieldType2;
+    function filterNote(f) {
+        return f.note == export_table_lib_1.NoteType.None;
+    }
     let extendClass = "";
     let usingProtoNamespace = "";
     let classNameOrigin = (0, CSParseTool_1.firstLetterUpper)(nameOrigin);
@@ -40,9 +35,14 @@ function export_stuff(paras) {
             // }
         }
         isValidField = (f) => {
-            let fieldInfo = classInfo?.getFieldInfo(f.name);
-            // console.log(`validf: ${f.name}, ${fieldInfo}`)
-            return fieldInfo == null;
+            if (filterNote(f)) {
+                let fieldInfo = classInfo?.getFieldInfo(f.name);
+                // console.log(`validf: ${f.name}, ${fieldInfo}`)
+                return fieldInfo == null;
+            }
+            else {
+                return false;
+            }
         };
         getFieldType2 = (f) => {
             let fieldInfo = classInfo?.getFieldInfo(f.name);
@@ -56,10 +56,18 @@ function export_stuff(paras) {
         };
     }
     else {
-        isValidField = (f) => true;
+        isValidField = (f) => filterNote(f);
         getFieldType2 = CSParseTool_1.getFieldType;
     }
     let validFields = fields.filter(f => isValidField(f));
+    let customFields = [];
+    for (let f2 of validFields) {
+        customFields.push(f2);
+        let f3 = (0, CSParseTool_1.convTupleArrayType)(f2);
+        if (f3 != undefined) {
+            customFields.push(f3);
+        }
+    }
     let mmpPrefix = CSParseTool_1.isOverwriteWithProto ? "[MemoryPackable]" : "";
     let isMMPEnabled = allTags.indexOf('csharp:mmp') != -1;
     let mmpNamespace = isMMPEnabled ? CSParseTool_1.useMMPNamespace : "";
@@ -123,7 +131,7 @@ ${(0, export_table_lib_1.foreach)((0, CSParseTool_1.getDescripts)(f), line => `	
 
 	${(0, export_table_lib_1.cmm)( /**生成get字段 */)}
 #region get字段
-${(0, export_table_lib_1.foreach)(fields, f => {
+${(0, export_table_lib_1.foreach)(validFields, f => {
         if (f.nameOrigin != f.name) {
             return `	public ${getFieldType2(f)} ${(0, CSParseTool_1.getTitle)(f).replace(" ", "_")} => ${(0, CSParseTool_1.convMemberName)(f.name)};`;
         }
@@ -134,7 +142,7 @@ ${(0, export_table_lib_1.foreach)(fields, f => {
 #endregion
 
 #region uid map
-${(0, export_table_lib_1.foreach)(fields, f => {
+${(0, export_table_lib_1.foreach)(validFields, f => {
         if (f.isUnique) {
             let memberName = (0, CSParseTool_1.convMemberName)(f.name);
             let paraName = (0, CSParseTool_1.convVarName)(memberName);
@@ -203,7 +211,7 @@ ${(0, export_table_lib_1.foreach)(fields, f => {
 #endregion uid map
 
 #region 生成fk.get/set
-${(0, export_table_lib_1.foreach)(fields, f => `
+${(0, export_table_lib_1.foreach)(validFields, f => `
 ${(0, export_table_lib_1.iff)(f.type == "fk", () => `
 ${(0, export_table_lib_1.iff)((0, CSParseTool_1.getFkFieldType)(tables, f).toLowerCase() != "uid", () => `
 	protected ${(0, CSParseTool_1.convMemberName)(f.fkTableName)}[] _fk${(0, CSParseTool_1.convMemberName)(f.name)}=null;

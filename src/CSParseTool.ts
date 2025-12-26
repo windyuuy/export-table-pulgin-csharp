@@ -193,6 +193,7 @@ export function ConvValue2Literal(value: any, t: FieldType, f: Field): string {
 		return `${value}`
 	}
 
+	console.error(`invalid type ${f.name}`, f)
 	throw new Error(`invalid type ${f.name}:<${f.rawType} => unkown>`)
 }
 
