@@ -1,12 +1,12 @@
 {
-  "name": "export-table-pulgin-csharp",
+  "name": "export-table-plugin-csharp",
   "version": "1.1.189",
   "description": "",
   "main": "./dist/index.js",
   "scripts": {},
   "repository": {
     "type": "git",
-    "url": "https://github.com/windyuuy/export-table-pulgin-csharp.git"
+    "url": "https://github.com/windyuuy/export-table-plugin-csharp.git"
   },
   "author": "windyuuy",
   "license": "ISC",
