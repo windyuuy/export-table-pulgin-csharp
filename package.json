@@ -1,6 +1,6 @@
 {
   "name": "export-table-plugin-csharp",
-  "version": "1.1.189",
+  "version": "1.1.190",
   "description": "",
   "main": "./dist/index.js",
   "scripts": {},

@@ -28,7 +28,7 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 
 	let RowClass = firstLetterUpper(name)
 	let initFunc = name + "Init"
-	let mapfield = fields.find(a => a.type == "key")//如果是map，则生成对应的map
+	// let mapfield = fields.find(a => a.type == "key")//如果是map，则生成对应的map
 	let mapName = name + "Map"
 
 	let isValidField: (f: Field) => boolean
@@ -71,10 +71,11 @@ export function export_stuff(paras: HandleSheetParams): string | null {
 		isValidField = (f: Field) => filterNote(f);
 		getFieldType2 = getFieldType
 	}
-	let validFields = fields.filter(f => isValidField(f))
-	
+	let exportFields = fields.filter(f => filterNote(f))
+	let validFields = exportFields.filter(f => isValidField(f))
+
 	let customFields: Field[] = []
-	for (let f2 of validFields) {
+	for (let f2 of exportFields) {
 		customFields.push(f2)
 		let f3 = convTupleArrayType(f2)
 		if (f3 != undefined) {
@@ -160,7 +161,7 @@ ${foreach(getDescripts(f), line =>
 
 	${cmm(/**生成get字段 */)}
 #region get字段
-${foreach(validFields, f => {
+${foreach(exportFields, f => {
 		if (f.nameOrigin != f.name) {
 			return `	public ${getFieldType2(f)} ${getTitle(f).replace(" ", "_")} => ${convMemberName(f.name)};`
 		} else {
@@ -171,7 +172,7 @@ ${foreach(validFields, f => {
 #endregion
 
 #region uid map
-${foreach(validFields, f => {
+${foreach(exportFields, f => {
 		if (f.isUnique) {
 			let memberName = convMemberName(f.name);
 			let paraName = convVarName(memberName);
@@ -239,7 +240,7 @@ ${foreach(validFields, f => {
 #endregion uid map
 
 #region 生成fk.get/set
-${foreach(validFields, f => `
+${foreach(exportFields, f => `
 ${iff(f.type == "fk", () => `
 ${iff(getFkFieldType(tables, f).toLowerCase() != "uid", () => `
 	protected ${convMemberName(f.fkTableName!)}[] _fk${convMemberName(f.name)}=null;
